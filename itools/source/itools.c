@@ -23,6 +23,7 @@ static PROMPT gPrompt[] = {
     {"itools", "ITOOLS:$ "},
     {"mvlog", "ITOOLS:$ =>MVLOG:$ "},
     {"capframe", "ITOOLS:$ =>CAPFRAME:$ "},
+    	{"vdmdump","ITOOLS:$ =>VDMDUMP:$ "},
 
 };
 
@@ -31,7 +32,7 @@ static int iNumPormpt = sizeof(gPrompt)/sizeof(PROMPT);
 static CMD_HANDLER gCmdHandler_itools[] = {
     {"help", cmd_handler_help_itools, "List all supported tools"},
     {"mvlog", cmd_handler_mvlog_itools, "mvlog tool"},
-    // {"vdmdump", cmd_handler_vdmdump_itools, "vdm_dump tool"},
+    {"vdmdump", cmd_handler_vdmdump_itools, "vdm_dump tool"},
     // {"setres", cmd_handler_setres_itools, "set_res tool(set HDMI output resolution)"},
     {"capframe", cmd_handler_capframe_itools, "capframe tool"},
     // {"setplane", cmd_handler_setplane_itools, "setplane tool"},
@@ -49,10 +50,14 @@ extern int iNumCmd_mvlog;
 extern CMD_HANDLER gCmdHandler_capframe[];
 extern int iNumCmd_capframe;
 
+extern CMD_HANDLER gCmdHandler_vdmdump[];
+extern int iNumCmd_vdmdump;
+
 static TOOL_CMD_HANDLER gToolCmdHandler[]={
     {"mvlog",gCmdHandler_mvlog,16},   //iNumCmd_mvlog
     {"itools",gCmdHandler_itools,2},    //iNumCmd_itools
-	{"capframe",gCmdHandler_capframe,7}, 
+    {"capframe",gCmdHandler_capframe,7}, 
+    	{"vdmdump",gCmdHandler_vdmdump,3},
 
 };
 
@@ -132,14 +137,25 @@ static int cmd_handler_capframe_itools(int argc,char * argv [])
 	cmd_handler_getarg_capframe(0,NULL);
 
 	if (argc >= 2)
-        ItoolsCommandline(argc, argv);
-    else
-        ItoolsCtrlEntry(argv);
+        		ItoolsCommandline(argc, argv);
+    	else
+        		ItoolsCtrlEntry(argv);
 
-    return 0;
+    	return 0;
 
 }
 
+static int cmd_handler_vdmdump(int argc, char * argv [ ])
+{
+
+	if (argc >= 2)
+        		ItoolsCommandline(argc, argv);
+    	else
+        		ItoolsCtrlEntry(argv);
+
+    	return 0;
+
+}
 
 static BOOL ParseCommand(char *argv[],char *pCmd)
 {
