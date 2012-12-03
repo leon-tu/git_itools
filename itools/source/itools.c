@@ -68,7 +68,7 @@ extern int iNumCmd_setres;
 
 static TOOL_CMD_HANDLER gToolCmdHandler[]={
     {"mvlog", gCmdHandler_mvlog, 16},   //iNumCmd_mvlog
-    {"itools", gCmdHandler_itools, 2},    //iNumCmd_itools
+    {"itools", gCmdHandler_itools, 7},    //iNumCmd_itools
     {"capframe", gCmdHandler_capframe, 7}, 
     {"vdmdump", gCmdHandler_vdmdump, 3},
     {"regctl", gCmdHandler_regctl, 3},
