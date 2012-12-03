@@ -25,7 +25,6 @@
 
 #define MAX_CMD_LEN       80
 #define MAX_ARG_CNT       10
-#define SetRes_PROMPT            "ITOOLS:$ =>HDMI_RES:$ "
 #define SetRes_REV         "1.0"
 #define INVALID_ARGUMENT  printf("Invalid argument!\n")
 #define PE_RES_TO_VPP_RES(peRes) ((peRes)-1)
@@ -37,7 +36,15 @@ typedef struct {
         UCHAR ucHdmiPixelRep;
 }HdmiConfig;
 
-HANDLE  hPE;
+CMD_HANDLER gCmdHandler_setres[] = {
+		{"help", cmd_handler_help_setres, "ShowHelp()"},
+		{"switch", cmd_handler_switch_setres, "parameter router"},
+};
+
+int iNumCmd_setres = sizeof(gCmdHandler_setres)/sizeof(CMD_HANDLER);
+
+extern HANDLE  gPe;
+
 static const int RES_INVALID = -1;
 static MV_CC_HANDLE_MsgQEx_t s_HdmiMsgQ; // HDMI receiving message queue
 static MV_OSAL_HANDLE_TASK_t s_HdmiCecTask;//HDMI envent handling task
@@ -217,7 +224,7 @@ int SetResolutionbyID(INT targetRes)
     MV_PE_VPP_HDMI_SINK_CAPS SinkCaps = {0};
 
     //read HDMI sink capability.
-    MV_PE_VOutHDMIGetSinkCaps(hPE, MV_PE_CHANNEL_PRIMARY_VIDEO, &SinkCaps);
+    MV_PE_VOutHDMIGetSinkCaps(gPe, MV_PE_CHANNEL_PRIMARY_VIDEO, &SinkCaps);
 
     if (SinkCaps.validEdid)
     {
@@ -233,28 +240,28 @@ int SetResolutionbyID(INT targetRes)
         if (SinkCaps.sprtedDispRes & (0x1 << PE_RES_TO_VPP_RES(targetRes)))
         {
             //mute HDMI output
-            MV_PE_VOutSetEnable(hPE, MV_PE_OUTPUT_VIDEO_HDMI, 0);
+            MV_PE_VOutSetEnable(gPe, MV_PE_OUTPUT_VIDEO_HDMI, 0);
             MV_OSAL_Task_Sleep(100);
 
             //box resolution is supported by HDMI receiver. update box resolution.
-            hr = MV_PE_VOutSetResolutionBDEx(hPE, MV_PE_CPCB_OUTPUT_VIDEO_PRIM, targetRes, HdmiCfg.ucHdmiBitDepth, NULL);
+            hr = MV_PE_VOutSetResolutionBDEx(gPe, MV_PE_CPCB_OUTPUT_VIDEO_PRIM, targetRes, HdmiCfg.ucHdmiBitDepth, NULL);
 
             if (targetRes >= MV_PE_VOUT_FORMAT_1920_1080_P_60)
             {
                 // set component output to 1080I
-                hr = MV_PE_VOutSetInput(hPE, MV_PE_OUTPUT_VIDEO_PRIM, MV_PE_CPCB_OUTPUT_VIDEO_PRIM, MV_PE_VOUT_INTERLACED);
-                hr = MV_PE_VOutSetEnable(hPE, MV_PE_OUTPUT_VIDEO_PRIM, TRUE);
+                hr = MV_PE_VOutSetInput(gPe, MV_PE_OUTPUT_VIDEO_PRIM, MV_PE_CPCB_OUTPUT_VIDEO_PRIM, MV_PE_VOUT_INTERLACED);
+                hr = MV_PE_VOutSetEnable(gPe, MV_PE_OUTPUT_VIDEO_PRIM, TRUE);
             }
             else if ((targetRes >= MV_PE_VOUT_FORMAT_1920_1080_P_30 && targetRes <= MV_PE_VOUT_FORMAT_1920_1080_P_2398) ||
                 (targetRes >= MV_PE_VOUT_FORMAT_1280_720_P_30 && targetRes <= MV_PE_VOUT_FORMAT_1280_720_P_25))
             {
                 // mute component output
-                hr = MV_PE_VOutSetEnable(hPE, MV_PE_OUTPUT_VIDEO_PRIM, FALSE);
+                hr = MV_PE_VOutSetEnable(gPe, MV_PE_OUTPUT_VIDEO_PRIM, FALSE);
             }
             else
             {
-                hr = MV_PE_VOutSetInput(hPE, MV_PE_OUTPUT_VIDEO_PRIM, MV_PE_CPCB_OUTPUT_VIDEO_PRIM, MV_PE_VOUT_AUTO_SELECT);
-                hr = MV_PE_VOutSetEnable(hPE, MV_PE_OUTPUT_VIDEO_PRIM, TRUE);
+                hr = MV_PE_VOutSetInput(gPe, MV_PE_OUTPUT_VIDEO_PRIM, MV_PE_CPCB_OUTPUT_VIDEO_PRIM, MV_PE_VOUT_AUTO_SELECT);
+                hr = MV_PE_VOutSetEnable(gPe, MV_PE_OUTPUT_VIDEO_PRIM, TRUE);
             }
 
             BoxResID = targetRes;
@@ -266,15 +273,15 @@ int SetResolutionbyID(INT targetRes)
             DEBUG_LOG("pixel repetition is %d!\n", HdmiCfg.ucHdmiPixelRep);
 			
             /* set HDMI Video format */
-            MV_PE_VOutHDMISetVideoFormat(hPE, MV_PE_OUTPUT_VIDEO_PRIM, 
+            MV_PE_VOutHDMISetVideoFormat(gPe, MV_PE_OUTPUT_VIDEO_PRIM, 
                 HdmiCfg.ucHdmiColorFormat, HdmiCfg.ucHdmiBitDepth, HdmiCfg.ucHdmiPixelRep);
             DEBUG_LOG("color format is %d!\n", HdmiCfg.ucHdmiColorFormat);
             DEBUG_LOG("bit depth is %d!\n", HdmiCfg.ucHdmiBitDepth);
 
             //set HDMI audio format.
-            MV_PE_AOutSetHDMIFormat(hPE, MV_PE_OUTPUT_AUDIO_PATH_HDMI, MV_PE_AOUT_HDMI_FORMAT_MULTI);
+            MV_PE_AOutSetHDMIFormat(gPe, MV_PE_OUTPUT_AUDIO_PATH_HDMI, MV_PE_AOUT_HDMI_FORMAT_MULTI);
 
-            MV_PE_VOutHDMISetAudioFormat(hPE, MV_PE_OUTPUT_VIDEO_PRIM, BoxResID, HdmiCfg.ucHdmiPixelRep, NULL);
+            MV_PE_VOutHDMISetAudioFormat(gPe, MV_PE_OUTPUT_VIDEO_PRIM, BoxResID, HdmiCfg.ucHdmiPixelRep, NULL);
         }else{
             printf("\nThis resolution is not supported by the connected device\n");
         }
@@ -301,7 +308,7 @@ static void ProcessHDMIMessage(UINT32 HdmiMsgID)
             printf("\n<<<<<HDMI cable is connected!!\n");
 
             //get sink capability (EDID)
-            MV_PE_VOutHDMIGetSinkCaps(hPE, MV_PE_CHANNEL_PRIMARY_VIDEO, &SinkCaps);
+            MV_PE_VOutHDMIGetSinkCaps(gPe, MV_PE_CHANNEL_PRIMARY_VIDEO, &SinkCaps);
 
             if (SinkCaps.validEdid)
             {
@@ -309,7 +316,7 @@ static void ProcessHDMIMessage(UINT32 HdmiMsgID)
                 SelectHDMIVideoFormat(&SinkCaps);
 
                 //mute HDMI output
-                MV_PE_VOutSetEnable(hPE, MV_PE_OUTPUT_VIDEO_HDMI, 0);
+                MV_PE_VOutSetEnable(gPe, MV_PE_OUTPUT_VIDEO_HDMI, 0);
                 MV_OSAL_Task_Sleep(100);
 
                 //HDMI cable is connected and EDID && BoxResID are valild.
@@ -317,7 +324,7 @@ static void ProcessHDMIMessage(UINT32 HdmiMsgID)
                 {
                     //box resolution is supported by HDMI receiver.
                     DEBUG_LOG("box resolution is supported!");
-                    hr  = MV_PE_VOutSetResolutionBDEx(hPE, MV_PE_CPCB_OUTPUT_VIDEO_PRIM, BoxResID, HdmiCfg.ucHdmiBitDepth, NULL);
+                    hr  = MV_PE_VOutSetResolutionBDEx(gPe, MV_PE_CPCB_OUTPUT_VIDEO_PRIM, BoxResID, HdmiCfg.ucHdmiBitDepth, NULL);
 		  }
                 else
                 {
@@ -337,7 +344,7 @@ static void ProcessHDMIMessage(UINT32 HdmiMsgID)
                         hdmiRes =  MV_PE_VOUT_FORMAT_720_480_P_5994;
 
                     //set HDMI/Component resolution.
-                    hr = MV_PE_VOutSetResolutionBDEx(hPE, MV_PE_CPCB_OUTPUT_VIDEO_PRIM, hdmiRes, HdmiCfg.ucHdmiBitDepth, NULL);
+                    hr = MV_PE_VOutSetResolutionBDEx(gPe, MV_PE_CPCB_OUTPUT_VIDEO_PRIM, hdmiRes, HdmiCfg.ucHdmiBitDepth, NULL);
 
                     //record the selected resolution as box resolution
                     BoxResID = hdmiRes;
@@ -350,16 +357,16 @@ static void ProcessHDMIMessage(UINT32 HdmiMsgID)
                 DEBUG_LOG("pixel repetition is %d!", HdmiCfg.ucHdmiPixelRep);
 			
                 /* set HDMI Video format */
-                MV_PE_VOutHDMISetVideoFormat(hPE, MV_PE_OUTPUT_VIDEO_PRIM, 
+                MV_PE_VOutHDMISetVideoFormat(gPe, MV_PE_OUTPUT_VIDEO_PRIM, 
                     HdmiCfg.ucHdmiColorFormat, HdmiCfg.ucHdmiBitDepth, HdmiCfg.ucHdmiPixelRep);
                 DEBUG_LOG("color format is %d!", HdmiCfg.ucHdmiColorFormat);
                 DEBUG_LOG("bit depth is %d!\n", HdmiCfg.ucHdmiBitDepth);
 
                 //set HDMI audio format.
-                MV_PE_AOutSetHDMIFormat(hPE, MV_PE_OUTPUT_AUDIO_PATH_HDMI, MV_PE_AOUT_HDMI_FORMAT_MULTI);
+                MV_PE_AOutSetHDMIFormat(gPe, MV_PE_OUTPUT_AUDIO_PATH_HDMI, MV_PE_AOUT_HDMI_FORMAT_MULTI);
 
-                MV_PE_VOutHDMISetAudioFormat(hPE, MV_PE_OUTPUT_VIDEO_PRIM, BoxResID, HdmiCfg.ucHdmiPixelRep, NULL);
-                MV_PE_VOutSetEnable(hPE, MV_PE_OUTPUT_VIDEO_HDMI, 1);
+                MV_PE_VOutHDMISetAudioFormat(gPe, MV_PE_OUTPUT_VIDEO_PRIM, BoxResID, HdmiCfg.ucHdmiPixelRep, NULL);
+                MV_PE_VOutSetEnable(gPe, MV_PE_OUTPUT_VIDEO_HDMI, 1);
             }
             break;
 
@@ -392,113 +399,12 @@ static VOID * HdmiCecTaskProc (VOID *arg)
     return NULL;
 }
 
-static BOOL ParseCommand(char *pCmd)
-{
-    char *pArg[MAX_ARG_CNT];
-    int argc = 0;
-    //BOOL bValid = FALSE;
-    int i;
-
-    while (*pCmd == 0x20) pCmd++;
-    
-    if (strlen(pCmd) == 0)
-        return TRUE; 
+int InitHdmiServe()
+{	
+	HRESULT rc;
+	MV_PE_VPP_HDMI_SINK_CAPS SinkCaps = {0};
 	
-    if (strcmp(pCmd, "quit") == 0)
-	{
-        		return FALSE;
-	}
-
-	if (strcmp(pCmd, "help") == 0)
-	{
-		pCmd= "-H" ;
-		
-	}
-	
-
-	if (pCmd[0] == '-')
-		{
-			SetResolutionbyKey(pCmd[1]);
-		}
-	else
-		{
-			printf("\nInvalid option!\n");
-		}
-
-		MV_OSAL_Task_Sleep(300);
-
-  //  pArg[argc] = pCmd;
-  //  argc++;
-
-
-/*
-    if (!bValid)
-    {
-        printf("Invalid command! Type help to see all supported command!\n");
-    }
-*/
-    /*for (i = 0; i < argc; i++)
-    {
-        printf("arg%d = %s\n", i, pArg[i]);
-    }*/
-
-    return TRUE;
-}
-
-static int GetCommand(char *pCmd, int iMaxSize)
-{
-    int count;
-    char ch;
-
-    if ((pCmd == 0) || (iMaxSize == 0))
-    {
-        return 0;
-    }
-
-    count = 0;
-    iMaxSize--;
-    while((ch = getchar()) != 0x0a)
-    {
-        if (count < iMaxSize)
-        {
-            pCmd[count++] = ch;
-        }
-    }
-
-    pCmd[count] = '\0';
-
-    return count;
-}
-
-
-INT SetResMain(INT argc, CHAR *argv[])
-{
-    HRESULT rc;
-
-    MV_PE_VPP_HDMI_SINK_CAPS SinkCaps = {0};
-    //char key_inputs = 0;
-
-    if (argc == 1)
-    {
-
-		/*
-        DEBUG_LOG("***********************************************");
-        DEBUG_LOG("Berlin HDMI Service Sample Code");
-        DEBUG_LOG("***********************************************\n\n");
-        */
-        /*Init OS */
-        MV_OSAL_Init();
-        MV_OSAL_Task_Sleep(1);
-        
-        /*Init a PE handle before do any PE API calls*/
-        rc = MV_PE_Init(&hPE);
-        if(rc != S_OK)
-        {
-        	DEBUG_LOG("Fail to init PE, exit!");
-        	goto EXIT;
-        }
-        
-             MV_PE_ShowLogo(hPE, TRUE);
+	MV_PE_ShowLogo(gPe, TRUE);
         
         /* Create HDMI message queue */
         rc = MV_CC_MsgQEx_Create(&s_HdmiMsgQ, MV_CC_MsgQType_ExITC, 0, HDMI_MSGQ_SIZE, sizeof(INT)+10);
@@ -507,25 +413,25 @@ INT SetResMain(INT argc, CHAR *argv[])
         MV_OSAL_Task_Create(&s_HdmiCecTask, HdmiCecTaskProc, NULL);
         
         /* load HDCP keys */
-        rc = MV_PE_VOutHDMILoadHDCPKeys(hPE, MV_PE_OUTPUT_VIDEO_PRIM);
+        rc = MV_PE_VOutHDMILoadHDCPKeys(gPe, MV_PE_OUTPUT_VIDEO_PRIM);
         
         if (rc == S_OK)
         {
         	/* enable HDCP */
         	DEBUG_LOG("Enable HDCP!\n");
-        	MV_PE_VOutHDMISetHDCP(hPE, MV_PE_OUTPUT_VIDEO_PRIM, TRUE);
+        	MV_PE_VOutHDMISetHDCP(gPe, MV_PE_OUTPUT_VIDEO_PRIM, TRUE);
         }
         else
         {
         	/* disable HDCP */
         	DEBUG_LOG("Disable HDCP!\n");
-        	MV_PE_VOutHDMISetHDCP(hPE, MV_PE_OUTPUT_VIDEO_PRIM, FALSE);
+        	MV_PE_VOutHDMISetHDCP(gPe, MV_PE_OUTPUT_VIDEO_PRIM, FALSE);
         }
         
-        MV_PE_RegisterEventCallBack(hPE, MV_PE_EVENT_VPP_HDMI, HdmiCecEvtHandler, 0, 0);
+        MV_PE_RegisterEventCallBack(gPe, MV_PE_EVENT_VPP_HDMI, HdmiCecEvtHandler, 0, 0);
         
         //get sink capability (EDID)
-        MV_PE_VOutHDMIGetSinkCaps(hPE, MV_PE_CHANNEL_PRIMARY_VIDEO, &SinkCaps);
+        MV_PE_VOutHDMIGetSinkCaps(gPe, MV_PE_CHANNEL_PRIMARY_VIDEO, &SinkCaps);
         
         if (SinkCaps.validEdid)
         {
@@ -534,7 +440,7 @@ INT SetResMain(INT argc, CHAR *argv[])
         	SelectHDMIVideoFormat(&SinkCaps);
         
         	//mute HDMI output
-        	MV_PE_VOutSetEnable(hPE, MV_PE_OUTPUT_VIDEO_HDMI, 0);
+        	MV_PE_VOutSetEnable(gPe, MV_PE_OUTPUT_VIDEO_HDMI, 0);
         	MV_OSAL_Task_Sleep(100);
         
         	//HDMI cable is connected and EDID && BoxResID are valild.
@@ -542,7 +448,7 @@ INT SetResMain(INT argc, CHAR *argv[])
         	{
         		//box resolution is supported by HDMI receiver.
         		DEBUG_LOG("box resolution is supported!\n");
-        		rc = MV_PE_VOutSetResolutionBDEx(hPE, MV_PE_CPCB_OUTPUT_VIDEO_PRIM, BoxResID, HdmiCfg.ucHdmiBitDepth, NULL);
+        		rc = MV_PE_VOutSetResolutionBDEx(gPe, MV_PE_CPCB_OUTPUT_VIDEO_PRIM, BoxResID, HdmiCfg.ucHdmiBitDepth, NULL);
         	}
         	else
         	{
@@ -563,7 +469,7 @@ INT SetResMain(INT argc, CHAR *argv[])
         		hdmiRes =  MV_PE_VOUT_FORMAT_720_480_P_5994;
         
         		//set HDMI/Component resolution.
-        		rc = MV_PE_VOutSetResolutionBDEx(hPE, MV_PE_CPCB_OUTPUT_VIDEO_PRIM, hdmiRes, HdmiCfg.ucHdmiBitDepth, NULL);
+        		rc = MV_PE_VOutSetResolutionBDEx(gPe, MV_PE_CPCB_OUTPUT_VIDEO_PRIM, hdmiRes, HdmiCfg.ucHdmiBitDepth, NULL);
         
         		//record the selected resolution as box resolution
         		BoxResID = hdmiRes;
@@ -576,103 +482,49 @@ INT SetResMain(INT argc, CHAR *argv[])
         	DEBUG_LOG("pixel repetition is %d!\n", HdmiCfg.ucHdmiPixelRep);
         		
         	/* set HDMI Video format */
-        	MV_PE_VOutHDMISetVideoFormat(hPE, MV_PE_OUTPUT_VIDEO_PRIM, 
+        	MV_PE_VOutHDMISetVideoFormat(gPe, MV_PE_OUTPUT_VIDEO_PRIM, 
         	HdmiCfg.ucHdmiColorFormat, HdmiCfg.ucHdmiBitDepth, HdmiCfg.ucHdmiPixelRep);
         	DEBUG_LOG("color format is %d!\n", HdmiCfg.ucHdmiColorFormat);
         	DEBUG_LOG("bit depth is %d!\n", HdmiCfg.ucHdmiBitDepth);
         
         	//set HDMI audio format.
-        	MV_PE_AOutSetHDMIFormat(hPE, MV_PE_OUTPUT_AUDIO_PATH_HDMI, MV_PE_AOUT_HDMI_FORMAT_MULTI);
+        	MV_PE_AOutSetHDMIFormat(gPe, MV_PE_OUTPUT_AUDIO_PATH_HDMI, MV_PE_AOUT_HDMI_FORMAT_MULTI);
         
-        	MV_PE_VOutHDMISetAudioFormat(hPE, MV_PE_OUTPUT_VIDEO_PRIM, BoxResID, HdmiCfg.ucHdmiPixelRep, NULL);
-        }
+        	MV_PE_VOutHDMISetAudioFormat(gPe, MV_PE_OUTPUT_VIDEO_PRIM, BoxResID, HdmiCfg.ucHdmiPixelRep, NULL);
 
-
-		HRESULT rc = 0;
-    		char    Cmd[MAX_CMD_LEN];
-    		int len;
-
-   		printf("***********************************************\n");
-    		printf("*      Berlin HDMI Service Sample Code   *\n");
-    		printf("***********************************************\n\n");
-
-    	do
-   	 {
-        		printf(SetRes_PROMPT);
-        		len = GetCommand(Cmd, MAX_CMD_LEN);
-       		 //printf("Command = %s, len = %d\n", Cmd, len);
-   	 }
-    	while (ParseCommand(Cmd));
-		
-/*
-        while(1)
-        {
-            if (key_inputs != '\n')
-                printf("\nHDMI_RES> ");
-        
-            key_inputs = getchar();
-            if (key_inputs == '-')
-            {
-                key_inputs = getchar();
-                if (key_inputs == 'Q')
-                    goto EXIT;
-                else
-                    SetResolutionbyKey(key_inputs);
-            }
-            else if (key_inputs != '\n')
-            {
-                printf("\nInvalid option!\n");
-            }
-
-            MV_OSAL_Task_Sleep(300);
-        }
-
-*/
-
-    }
-    else if (argc == 2)
-    {
-
-	    if(strcmp(argv[1],"quit") == 0)
-	        goto EXIT;
-		
-	    if(strcmp(argv[1],"help") == 0)
-	    {
-	        argv[1] = "-H";
-	    }
-		
-       	    if (argv[1][0] == '-')
-        	    {
-                    /*Init OS */
-                MV_OSAL_Init();
-                MV_OSAL_Task_Sleep(1);
-        
-                /*Init a PE handle before do any PE API calls*/
-                rc = MV_PE_Init(&hPE);
-
-                BoxResID = RES_INVALID;
-                SetResolutionbyKey(argv[1][1]);
-            }
-			
-            else
-       	    {
-                printf("\nInvalid option!\n");
-            }
-
-    }
-
-else
-	{
-		printf("\nInvalid option!\n");
 	}
 
-EXIT:
-    MV_PE_Remove(hPE);
-    MV_OSAL_Exit();
+}
 
-    DEBUG_LOG("Leave Berlin HDMI Service Sample Code\n\n");
+int cmd_handler_help_setres(int argc, char * argv [ ])
+{
+	ShowHelp();
+	return 0;
+}
 
-    return rc;
+int cmd_handler_switch_setres(int argc, char * argv [ ])
+{
+	HRESULT rc;
+	
+	if (argc == 2)
+		{
+			if (argv[1][0] != '-')
+				{
+					printf("Invalid arguments\n");
+					rc = -1;
+				}
+			SetResolutionbyKey(argv[1][1]);
+			rc = 0;
+		}
+
+	else
+		{
+			printf("Invalid arguments\n");
+			rc = -1;
+
+		}			
+
+	return rc;
 }
 
 static VOID SetResolutionbyKey(char key)
@@ -776,35 +628,35 @@ static VOID ShowHelp()
     puts(
         "\n"
         "         Arguments::\n"
-        "         help     Show keyboard to resolution mapping\n"		//-H
-        "         quit     Exit the program gracefully\n"				//-Q
-        "         -a       NTSC_M          \n"
-        "         -b       NTSC_J          \n"
-        "         -c       PAL_M           \n"
-        "         -d       PAL_BGH         \n"
-        "         -e       720x480I   60Hz    \n"
-        "         -f       720x480I   59.94Hz  \n"
-        "         -g       720x576I   50Hz    \n"
-        "         -h       720x480P   60Hz    \n"
-        "         -i       720x480P   59.94Hz  \n"
-        "         -j       720x576P   50Hz    \n"
-        "         -k       1280x720P  29.97Hz \n"
-        "         -l       1280x720P  25Hz   \n"
-        "         -m       1280x720P  60Hz   \n"
-        "         -n       1280x720P  59.94Hz \n"
-        "         -o       1280x720P  50Hz   \n"
-        "         -p       1920x1080I 60Hz  \n"
-        "         -q       1920x1080I 59.94Hz\n"
-        "         -r       1920x1080I 50Hz  \n"
-        "         -s       1920x1080P 30Hz  \n"
-        "         -t       1920x1080P 29.97Hz\n"
-        "         -u       1920x1080P 25Hz  \n"
-        "         -v       1920x1080P 24Hz  \n"
-        "         -w       1920x1080P 25Hz  \n"
-        "         -x       1920x1080P 23.98Hz\n"
-        "         -y       1920x1080P 60Hz  \n"
-        "         -z       1920x1080P 59.94Hz\n"
-        "         -1       1920x1080P 50Hz  \n"
+        "         help     	      Show keyboard to resolution mapping\n"		//-H
+        "         quit     	      Exit the program gracefully\n"				//-Q
+        "         switch -a       NTSC_M          \n"
+        "         switch -b       NTSC_J          \n"
+        "         switch -c       PAL_M           \n"
+        "         switch -d       PAL_BGH         \n"
+        "         switch -e       720x480I   60Hz    \n"
+        "         switch -f       720x480I   59.94Hz  \n"
+        "         switch -g       720x576I   50Hz    \n"
+        "         switch -h       720x480P   60Hz    \n"
+        "         switch -i       720x480P   59.94Hz  \n"
+        "         switch -j       720x576P   50Hz    \n"
+        "         switch -k       1280x720P  29.97Hz \n"
+        "         switch -l       1280x720P  25Hz   \n"
+        "         switch -m       1280x720P  60Hz   \n"
+        "         switch -n       1280x720P  59.94Hz \n"
+        "         switch -o       1280x720P  50Hz   \n"
+        "         switch -p       1920x1080I 60Hz  \n"
+        "         switch -q       1920x1080I 59.94Hz\n"
+        "         switch -r       1920x1080I 50Hz  \n"
+        "         switch -s       1920x1080P 30Hz  \n"
+        "         switch -t       1920x1080P 29.97Hz\n"
+        "         switch -u       1920x1080P 25Hz  \n"
+        "         switch -v       1920x1080P 24Hz  \n"
+        "         switch -w       1920x1080P 25Hz  \n"
+        "         switch -x       1920x1080P 23.98Hz\n"
+        "         switch -y       1920x1080P 60Hz  \n"
+        "         switch -z       1920x1080P 59.94Hz\n"
+        "         switch -1       1920x1080P 50Hz  \n"
         "\n"
         "         Notes:\n"
         "         This HDMI service code can be served as HDMI demostration and resolution setting utility\n\n"

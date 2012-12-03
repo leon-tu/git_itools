@@ -35,11 +35,11 @@
 #define MVVDMDUMP_REV "0.1"
 
 CMD_HANDLER gCmdHandler_vdmdump[] = {
-    {"help", cmd_handler_help, "List all supported commands"},
-    {"estreams", cmd_handler_dump_estreams, "Dump es streams to file" },
-    {"frames", cmd_handler_dump_frames, "Dump decoed frames to file" },
+    {"help", cmd_handler_help_vdmdump, "List all supported commands"},
+    {"estreams", cmd_handler_dump_estreams_vdmdump, "Dump es streams to file" },
+    {"frames", cmd_handler_dump_frames_vdmdump, "Dump decoed frames to file" },
 };
-int iNumCmd_vdmdump = sizeof(gCmdHandler)/sizeof(CMD_HANDLER);
+int iNumCmd_vdmdump = sizeof(gCmdHandler_vdmdump)/sizeof(CMD_HANDLER);
 
 int cmd_handler_help_vdmdump(int argc, char *argv[])
 {
@@ -49,9 +49,10 @@ int cmd_handler_help_vdmdump(int argc, char *argv[])
     printf("  Usage: 1. vdmdump command [arg1] [arg2] ...\n\n");
     printf("         2. vdmdump; \n             command [arg1] [arg2] ...\n\n");
     printf("All supported commands:\n\n");
-    for (i = 0; i < iNumCmd; i++)
+	
+    for (i = 0; i < iNumCmd_vdmdump; i++)
     {
-        printf("  %-12s- %s\n", gCmdHandler[i].pCmd, gCmdHandler[i].pHelp);
+        printf("  %-12s- %s\n", gCmdHandler_vdmdump[i].pCmd, gCmdHandler_vdmdump[i].pHelp);
     }
     return 0;
 }

@@ -51,6 +51,8 @@ typedef struct CapturePara
 } CAPTURE_PARA;
 static CAPTURE_PARA gCurrentPara;
 
+extern HANDLE gPe;
+extern HANDLE ghVIP;
 
 int cmd_handler_setmode_capframe(int argc, char *argv[])
 {
@@ -232,17 +234,17 @@ int cmd_handler_encap_capframe(int argc, char *argv[])
 }
 
 CMD_HANDLER gCmdHandler_capframe[] = {
-    {"help", cmd_handler_help, "List all supported commands"},
-    {"setmode", cmd_handler_setmode, "Set the video capture mode. 0(capture partial of the video frame); 1(capture the downscaled version of the video frame) ex: setmode 0"},
-    {"setwin", cmd_handler_setwin, "Set the window size for video capture. The format is (x, y, width, height). ex: setwin 0 0 320 240"},
-    {"setpath", cmd_handler_setpath, "Set the path and prefix to save the captured frames. ex: setpath /data/"},
-    {"setnum", cmd_handler_setnum, "Set the number of captured frame. ex: setnum 10"},
-    {"getarg", cmd_handler_getarg, "Get current arg setting."},
-    {"cap", cmd_handler_encap, "Enable and start the capture frame function."},
+    {"help", cmd_handler_help_capframe, "List all supported commands"},
+    {"setmode", cmd_handler_setmode_capframe, "Set the video capture mode. 0(capture partial of the video frame); 1(capture the downscaled version of the video frame) ex: setmode 0"},
+    {"setwin", cmd_handler_setwin_capframe, "Set the window size for video capture. The format is (x, y, width, height). ex: setwin 0 0 320 240"},
+    {"setpath", cmd_handler_setpath_capframe, "Set the path and prefix to save the captured frames. ex: setpath /data/"},
+    {"setnum", cmd_handler_setnum_capframe, "Set the number of captured frame. ex: setnum 10"},
+    {"getarg", cmd_handler_getarg_capframe, "Get current arg setting."},
+    {"cap", cmd_handler_encap_capframe, "Enable and start the capture frame function."},
     //extension and alias
 };
 
-int iNumCmd_capframe = sizeof(gCmdHandler)/sizeof(CMD_HANDLER);
+int iNumCmd_capframe = sizeof(gCmdHandler_capframe)/sizeof(CMD_HANDLER);
 
 int cmd_handler_help_capframe(int argc, char *argv[])
 {
@@ -252,9 +254,9 @@ int cmd_handler_help_capframe(int argc, char *argv[])
     printf("  Author: Chang Liu <liuchang@marvell.com>\n");
     printf("  Usage:  capframe; \n            command [arg1] [arg2] ...\n\n");
     printf("All supported commands:\n\n");
-    for (i = 0; i < iNumCmd; i++)
+    for (i = 0; i < iNumCmd_capframe; i++)
     {
-        printf("  %-12s- %s\n", gCmdHandler[i].pCmd, gCmdHandler[i].pHelp);
+        printf("  %-12s- %s\n", gCmdHandler_capframe[i].pCmd, gCmdHandler_capframe[i].pHelp);
     }
     return 0;
 }

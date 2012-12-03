@@ -333,12 +333,6 @@ int read_hex(char *c)
 	return 0;
 }
 
-struct regctl_command {
-	char *commstr;
-	int (*cmdfunc) (int, char **);
-	char *helpstring;
-	int *end;
-};
 
 #define REGCTL_DEFAULT_LOADFILEPATH		"./regctl_data.bin"
 static FILE *load_file_ = NULL;
@@ -354,6 +348,7 @@ static int verbose_ = 0;
 
 #define REGCTL_MAN_WRITE 		"   write [ADDR] [VAL]\twritw regster at address with value [VAL] aligned"
 #define REGCTL_MAN_HELP			"   help [COMMAND]    \tshow this help, and show usage of COMMAND"
+#define REGCTL_MAN_TEST		"devmem_assess_test(0,0)"
 
 static const char *optString = "bo:v?";
 static const struct option CommandOption[] = {
@@ -363,23 +358,39 @@ static const struct option CommandOption[] = {
 	{NULL, no_argument, NULL, 0}
 };
 
-static int regctl_cmd_read(int argc, char *argv[]);
-static int regctl_cmd_write(int argc, char *argv[]);
-static int regctl_cmd_test(int argc, char *argv[]);
-static int regctl_cmd_help(int argc, char *argv[]);
-static int __regctl_cmd_help(char *cmd);
-static void display_usage(void);
+//static int __regctl_cmd_help(char *cmd);
+//static void display_usage(void);
 
-static const struct regctl_command regComm[] = {
-	{"read", regctl_cmd_read, REGCTL_MAN_READ, NULL},
-	{"write", regctl_cmd_write, REGCTL_MAN_WRITE, NULL},
-	{"test", regctl_cmd_test, REGCTL_MAN_HELP, NULL},
-	{"help", regctl_cmd_help, REGCTL_MAN_HELP, NULL},
-	{NULL,}
+CMD_HANDLER gCmdHandler_regctl[] = {
+	{"read", cmd_handler_read_regctl, REGCTL_MAN_READ},
+	{"write", cmd_handler_write_regctl, REGCTL_MAN_WRITE},
+	{"test", cmd_handler_test_regctl, REGCTL_MAN_TEST},
+	{"help", cmd_handler_help_regctl, REGCTL_MAN_HELP},
+
 };
 
-static unsigned int regCommLen =
-    sizeof(regComm) / sizeof(struct regctl_command);
+int iNumCmd_regctl = sizeof(gCmdHandler_regctl)/sizeof(CMD_HANDLER);
+
+static int DebugVerboseSet(int argc, char *argv[])
+{	
+	unsigned int longIndex = 0;
+	debug_ = verbose_ = 0;
+	
+    	while (longIndex < argc)
+    	{
+        		if (strcasecmp(argv[longIndex], "-v") == 0)
+        		{
+          		debug_ = verbose_ = 1;
+      			break;
+        		}
+        		longIndex++;
+   	 }
+
+	return 0;
+}
+
+
+
 
 static long myatol(char *string)
 {
@@ -404,8 +415,28 @@ static long myatol(char *string)
 	return val;
 }
 
-static int regctl_cmd_read(int argc, char *argv[])
+static int __regctl_cmd_help(char *cmd)
 {
+	unsigned int longIndex = 0;
+
+	while (longIndex < iNumCmd_regctl) {
+    	if (0 == strncmp(cmd, gCmdHandler_regctl[longIndex].pCmd, 16)) 
+	{
+    		printf("%s\n", gCmdHandler_regctl[longIndex].pHelp);
+    		return 0;
+    	}
+    	longIndex++;
+	}
+
+	printf("\n Invalid command \n");    //added
+	return -1;
+}
+
+
+
+int cmd_handler_read_regctl(int argc, char *argv[])
+{
+
 	unsigned int addr = 0, size = 0;
 	int longIndex = 0, i;
 	int opt = 0;
@@ -494,7 +525,7 @@ static int regctl_cmd_read(int argc, char *argv[])
 }
 
 
-static int regctl_cmd_write(int argc, char *argv[])
+int cmd_handler_write_regctl(int argc, char *argv[])
 {
 	unsigned int addr, value;
 	int longIndex = 0, i;
@@ -571,19 +602,20 @@ static int regctl_cmd_write(int argc, char *argv[])
 	return devmem_access_set_value(addr, value);
 }
 
-static int regctl_cmd_test(int argc, char *argv[])
+int cmd_handler_test_regctl(int argc, char *argv[])
 {
 	return devmem_access_test(0, 0);
 }
 
+/*
 static int __regctl_cmd_help(char *cmd)
 {
 	unsigned int longIndex = 0;
 
-	while (longIndex < regCommLen) {
-    	if (0 == strncmp(cmd, regComm[longIndex].commstr, 16)
-    	    && regComm[longIndex].cmdfunc) {
-    		printf("%s\n", regComm[longIndex].helpstring);
+	while (longIndex < iNumCmd_regctl) {
+    	if (0 == strncmp(cmd, gCmdHandler_regctl[longIndex].commstr, 16)
+    	    && gCmdHandler_regctl[longIndex].cmdfunc) {
+    		printf("%s\n", gCmdHandler_regctl[longIndex].helpstring);
     		return 0;
     	}
     	longIndex++;
@@ -593,20 +625,36 @@ static int __regctl_cmd_help(char *cmd)
 	return -1;
 }
 
-static int regctl_cmd_help(int argc, char *argv[])
-{
-//	unsigned int longIndex = 0;
+*/
+int cmd_handler_help_regctl(int argc, char *argv[])
+{	
+	printf("Marvell Galois PE Debug Control System\n\n");
+   	printf("  Revision: %s\n", version);
+    	//printf("  Author: Jun Ma <junma@marvell.com>\n");
+    	printf("  Usage: 1. regctl command [arg1] [arg2] ...\n\n");
+    	printf("         2. regctl; \n             command [arg1] [arg2] ...\n\n");
+    	printf("All supported commands:\n\n");
+	int i;
+    	for (i = 0; i < iNumCmd_regctl; i++)
+    	{
+        		printf("         %-12s- %s\n", gCmdHandler_regctl[i].pCmd, gCmdHandler_regctl[i].pHelp);
+    	}
 
+	return 0;
+//	unsigned int longIndex = 0;
+/*
 	if (argc == 1) {
 		display_usage();
 		return 0;
 	}
 	
     return __regctl_cmd_help(argv[1]);
+    */
 }
 
 /* Display program usage, and exit.
  */
+ /*
 static void display_usage(void)
 {
         printf("  Berlin Register Control\n\n");
@@ -621,16 +669,15 @@ static void display_usage(void)
 	//exit(EXIT_FAILURE);      //need to omit 
 }
 
+*/
+
+/*
+
 int RegctlMain(int argc, char *argv[])
 {
 	
 	unsigned int longIndex = 0;
 
-/*
-	if (argc == 1) {
-		display_usage();
-	}
-*/
     while (longIndex < argc)
     {
         if (strcasecmp(argv[longIndex], "-v") == 0)
@@ -642,10 +689,10 @@ int RegctlMain(int argc, char *argv[])
     }
     
 	longIndex = 0;
-	while (longIndex < regCommLen) {
-		if (0 == strncmp(argv[1], regComm[longIndex].commstr, 16)
-		    && regComm[longIndex].cmdfunc) {
-			regComm[longIndex].cmdfunc(argc - 1, &argv[1]);
+	while (longIndex < iNumCmd_regctl) {
+		if (0 == strncmp(argv[1], gCmdHandler_regctl[longIndex].commstr, 16)
+		    && gCmdHandler_regctl[longIndex].cmdfunc) {
+			gCmdHandler_regctl[longIndex].cmdfunc(argc - 1, &argv[1]);
 			return 0;
 		}
 		longIndex++;
@@ -689,3 +736,5 @@ if (argc == 2) {
 
 return 0;
 }
+
+*/

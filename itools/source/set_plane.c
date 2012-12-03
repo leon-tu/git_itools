@@ -14,11 +14,18 @@
 
 #define MAX_CMD_LEN       80
 #define MAX_ARG_CNT       10
-#define SetPlane_PROMPT            "ITOOLS:$ =>SET_PLANE:$ "
 #define SetPlane_REV         "1.0"
+#define SWITCH	"switch"
 #define INVALID_ARGUMENT  printf("Invalid argument!\n")
 
-void *hPE = NULL;
+CMD_HANDLER gCmdHandler_setplane[] = {
+		{"help", cmd_handler_help_setplane, "ShowHelp()"},
+		{"switch", cmd_handler_switch_setplane, "parameter router"},
+
+};
+//void *hPE = NULL;
+extern HANDLE gPe;
+
 int channel_id;
 void * hGFX=NULL;
 MV_PE_GFX_HCEL hCel=NULL;
@@ -41,14 +48,14 @@ static int get_plane_information()
 	int plane_id;
         for(plane_id=0; plane_id <7; plane_id++){
         	printf("plane id=%d, %s\n", plane_id+1, plane_names[plane_id]);
-		ret = MV_PE_VideoGetZOrder(hPE, plane_id+1, &zOrder);
+		ret = MV_PE_VideoGetZOrder(gPe, plane_id+1, &zOrder);
 	        if (ret){
         	        printf("MV_PE_VideoGetZOrder faild, ret=0x%x\n", ret);
                 	return ret;
 	        }
         	printf("    zorder =%u\n", zOrder);
 
-	        ret = MV_PE_VideoGetVisible(hPE, plane_id+1,&Visible);
+	        ret = MV_PE_VideoGetVisible(gPe, plane_id+1,&Visible);
         	if (ret){
 	                printf("MV_PE_VideoGetVisible faild, ret=0x%x\n", ret);
 	                return ret;
@@ -62,7 +69,7 @@ static int pe_suspend()
 {
 	int ret = 0;
 
-	ret = MV_PE_PowerSuspend(hPE);
+	ret = MV_PE_PowerSuspend(gPe);
 	if (ret){
 		printf("MV_PE_PowerSuspend faild, ret=0x%x\n", ret);
 		return ret;
@@ -76,7 +83,7 @@ static int pe_resume()
 {
 	int ret = 0;
 
-	ret = MV_PE_PowerResume(hPE);
+	ret = MV_PE_PowerResume(gPe);
 	if (ret){
 		printf("MV_PE_PowerResume faild, ret=0x%x\n", ret);
 		return ret;
@@ -96,7 +103,7 @@ static int get_scaling()
 	printf("Please input plane id:\n");
         scanf("%d", &plane_id);
 
-	ret = MV_PE_VideoGetScaling(hPE, plane_id, &srcW, &dstW);
+	ret = MV_PE_VideoGetScaling(gPe, plane_id, &srcW, &dstW);
 	if (ret){
 		printf("MV_PE_VideoGetScaling faild, ret=0x%x\n", ret);
 		return ret;
@@ -161,7 +168,7 @@ static int set_scaling()
 	}
 	printf("plane_id=%d, src_window={%d*%d}, dst_window={%d,%d}\n", plane_id, srcW.w, srcW.h, dstW.w, dstW.h);
 
-	ret = MV_PE_VideoSetScaling(hPE, plane_id, &srcW, &dstW);
+	ret = MV_PE_VideoSetScaling(gPe, plane_id, &srcW, &dstW);
 	if (ret){
 		printf("MV_PE_VideoSetScaling faild, ret=0x%x\n", ret);
 		return ret;
@@ -181,12 +188,12 @@ static int set_plane_visible()
 	scanf("%u", &visible);
 	printf("planed id=%d, visible=%u\n", plane_id, visible);
 
-	ret = MV_PE_VideoSetVisible(hPE, plane_id, visible);
+	ret = MV_PE_VideoSetVisible(gPe, plane_id, visible);
 	if (ret){
 		printf("MV_PE_VideoSetVisible faild, ret=0x%x\n", ret);
 		return ret;
 	}
-	ret = MV_PE_VideoGetVisible(hPE, plane_id, &visible);
+	ret = MV_PE_VideoGetVisible(gPe, plane_id, &visible);
 	if (ret){
 		printf("MV_PE_VideoGetVisible faild, ret=0x%x\n", ret);
 		return ret;
@@ -205,29 +212,29 @@ static int swap_zorder()
 	scanf("%d", &bottom_id);
         printf("Please input plane-2 id:\n");
         scanf("%u", &top_id);
-        ret = MV_PE_VideoGetZOrder(hPE, bottom_id, &bottom_zorder);
+        ret = MV_PE_VideoGetZOrder(gPe, bottom_id, &bottom_zorder);
         if (ret){
                 printf("MV_PE_VideoGetZOrder faild, ret=0x%x\n", ret);
                 return ret;
         }
 
-	ret = MV_PE_VideoGetZOrder(hPE, top_id, &top_zorder);
+	ret = MV_PE_VideoGetZOrder(gPe, top_id, &top_zorder);
         if (ret){
                 printf("MV_PE_VideoGetZOrder faild, ret=0x%x\n", ret);
                 return ret;
         }
         printf("planed-1 id=%d, zorder=%d\n", bottom_id, bottom_zorder);
         printf("planed-2 id=%d, zorder=%d\n", top_id, top_zorder);
-	MV_PE_VideoSetZOrder(hPE, top_id, bottom_zorder);
-	MV_PE_VideoSetZOrder(hPE, bottom_id, top_zorder);
+	MV_PE_VideoSetZOrder(gPe, top_id, bottom_zorder);
+	MV_PE_VideoSetZOrder(gPe, bottom_id, top_zorder);
         
-	ret = MV_PE_VideoGetZOrder(hPE, bottom_id, &bottom_zorder);
+	ret = MV_PE_VideoGetZOrder(gPe, bottom_id, &bottom_zorder);
         if (ret){
                 printf("MV_PE_VideoGetZOrder faild, ret=0x%x\n", ret);
                 return ret;
         }
 
-	ret = MV_PE_VideoGetZOrder(hPE, top_id, &top_zorder);
+	ret = MV_PE_VideoGetZOrder(gPe, top_id, &top_zorder);
         if (ret){
                 printf("MV_PE_VideoGetZOrder faild, ret=0x%x\n", ret);
                 return ret;
@@ -249,7 +256,7 @@ static int draw_2d_graphics()
 
 	printf("Please input plane id:\n");
 	scanf("%u", &plane_id);
-	ret = MV_PE_GFX_Open(hPE, plane_id, "LAYER2", &hGFX);
+	ret = MV_PE_GFX_Open(gPe, plane_id, "LAYER2", &hGFX);
 	if (ret ||(!hGFX)){
 	    printf("open gfx error, ret=0x%x\n",ret);
             return ret;
@@ -327,7 +334,7 @@ static int draw_null_image()
 
 	printf("Please input plane id:\n");
 	scanf("%u", &plane_id);
-	ret = MV_PE_GFX_Open(hPE, plane_id, "LAYER2", &hGFX);
+	ret = MV_PE_GFX_Open(gPe, plane_id, "LAYER2", &hGFX);
 	if (ret ||(!hGFX)){
 	    printf("open gfx error, ret=0x%x\n",ret);
       return ret;
@@ -357,7 +364,7 @@ static int draw_w_h_by_gpu2d()
 
 	printf("Please input plane id:\n");
 	scanf("%u", &plane_id);
-	ret = MV_PE_GFX_Open(hPE, plane_id, "LAYER2", &hGFX);
+	ret = MV_PE_GFX_Open(gPe, plane_id, "LAYER2", &hGFX);
 	if (ret ||(!hGFX)){
 	    printf("open gfx error, ret=0x%x\n",ret);
             return ret;
@@ -488,7 +495,7 @@ static int draw_w_h_no_gpu()
 
 	printf("Please input plane id:\n");
 	scanf("%u", &plane_id);
-	ret = MV_PE_GFX_Open(hPE, plane_id, "LAYER2", &hGFX);
+	ret = MV_PE_GFX_Open(gPe, plane_id, "LAYER2", &hGFX);
 	if (ret ||(!hGFX)){
 	    printf("open gfx error, ret=0x%x\n",ret);
             return ret;
@@ -621,7 +628,7 @@ static int draw_full_screen_rawdata()
 
 	printf("Please input plane id:\n");
 	scanf("%u", &plane_id);
-	ret = MV_PE_GFX_Open(hPE, plane_id, "LAYER2", &hGFX);
+	ret = MV_PE_GFX_Open(gPe, plane_id, "LAYER2", &hGFX);
 	if (ret ||(!hGFX)){
 	    printf("open gfx error, ret=0x%x\n",ret);
             return ret;
@@ -688,7 +695,7 @@ int gfx_2d_unit_test()
 
         printf("Please input plane id:\n");
         scanf("%u", &plane_id);
-        ret = MV_PE_GFX_Open(hPE, plane_id, "LAYER2", &hGFX);
+        ret = MV_PE_GFX_Open(gPe, plane_id, "LAYER2", &hGFX);
         if (ret ||(!hGFX)){
             printf("open gfx error, ret=0x%x\n",ret);
             return ret;
@@ -789,7 +796,7 @@ int get_plane_bk_color()
         printf("Please input plane id:\n");
         scanf("%d", &plane_id);
 
-        ret = MV_PE_VideoGetBkColor(hPE, plane_id, &format, &color);
+        ret = MV_PE_VideoGetBkColor(gPe, plane_id, &format, &color);
         if (ret){
                 printf("MV_PE_VideoGetBkColor faild, ret=0x%x\n", ret);
                 return ret;
@@ -817,12 +824,12 @@ int set_plane_bk_color()
         color = ((b&0xff)<<16)|((g&0xff)<<8)|((r&0xff));
         printf("color is 0x%x\n", color);
 
-        ret = MV_PE_VideoSetBkColor(hPE, plane_id, MV_PE_VIDEO_COLOR_FORMAT_RGB888, color);
+        ret = MV_PE_VideoSetBkColor(gPe, plane_id, MV_PE_VIDEO_COLOR_FORMAT_RGB888, color);
         if (ret){
                 printf("MV_PE_VideoSetBkColor faild, ret=0x%x\n", ret);
                 return ret;
         }
-  ret = MV_PE_VideoGetBkColor(hPE, plane_id, &format, &color);
+  ret = MV_PE_VideoGetBkColor(gPe, plane_id, &format, &color);
         if (ret){
                 printf("MV_PE_VideoGetBkColor faild, ret=0x%x\n", ret);
                 return ret;
@@ -840,7 +847,7 @@ int get_cpcb_bk_color()
         int format, color;
 
 
-        ret = MV_PE_VOutGetCPCBBkColor(hPE, cpcb_id, &format, &color);
+        ret = MV_PE_VOutGetCPCBBkColor(gPe, cpcb_id, &format, &color);
         if (ret){
                 printf("MV_PE_VOutGetCPCBBkColor faild, ret=0x%x\n", ret);
                 return ret;
@@ -866,12 +873,12 @@ int set_cpcb_bk_color()
         color = ((b&0xff)<<16)|((g&0xff)<<8)|((r&0xff));
         printf("color is 0x%x\n", color);
 
-        ret = MV_PE_VOutSetCPCBBkColor(hPE, cpcb_id, MV_PE_VIDEO_COLOR_FORMAT_RGB888, color);
+        ret = MV_PE_VOutSetCPCBBkColor(gPe, cpcb_id, MV_PE_VIDEO_COLOR_FORMAT_RGB888, color);
         if (ret){
                 printf("MV_PE_VOutSetCPCBBkColor faild, ret=0x%x\n", ret);
                 return ret;
         }
-  ret = MV_PE_VOutGetCPCBBkColor(hPE, cpcb_id, &format, &color);
+  ret = MV_PE_VOutGetCPCBBkColor(gPe, cpcb_id, &format, &color);
         if (ret){
                 printf("MV_PE_VOutGetCPCBBkColor faild, ret=0x%x\n", ret);
                 return ret;
@@ -888,7 +895,7 @@ int get_output_resolution()
 	INT16  outW, outH;
 	UINT8 Format;
 	MV_PE_VOUT_TG_PARAMS Params;
-	ret = MV_PE_VOutGetResolution(hPE, 0, &Format, &Params);
+	ret = MV_PE_VOutGetResolution(gPe, 0, &Format, &Params);
         if (ret){
                 printf("MV_PE_VOutGetResolution failed, ret=0x%x\n", ret);
                 return ret;
@@ -958,33 +965,33 @@ static void ShowHelp()
     printf("         2. setplane; \n             command \n\n");
     
     printf("  All supported commands:\n\n");
-    printf("         %-6d- %s\n", 0, "get plane information");
-    printf("         %-6d- %s\n", 1, "plane visible setting");
-    printf("         %-6d- %s\n", 2,"2d gfx drawing+displaying");
-    printf("         %-6d- %s\n", 3 ,"swap zorder");
-    printf("         %-6d- %s\n", 4,"set scaling");
-    printf("         %-6d- %s\n", 5,"get scaling");
-    printf("         %-6d- %s\n",6,"pe suspend");
-    printf("         %-6d- %s\n",7,"pe resume");
-    printf("         %-6d- %s\n",8,"2d gfx unit test");
-    printf("         %-6d- %s\n",11,"get plane background color");
-    printf("         %-6d- %s\n",12,"set plane background color");
-    printf("         %-6d- %s\n",13,"get cpcb background color");
-    printf("         %-6d- %s\n",14,"set cpcb background color");
-    printf("         %-6d- %s\n",15,"draw a null image");
-    printf("         %-6d- %s\n",16,"draw a w*h image with gpu2d");
-    printf("         %-6d- %s\n",17,"draw a w*h with no gpu");
-    printf("         %-6d- %s\n",18,"draw a full screen rawdata");
-    printf("         %-6d- %s\n",19,"get output resolution");
-    printf("         %-6s- %s\n","help","list all supported commands");
-    printf("         %-6s- %s\n","quit","exiting\n");
+    printf("         %-12s- %s\n", "SWITCH 0","get plane information");
+    printf("         %-12s- %s\n", "SWITCH 1", "plane visible setting");
+    printf("         %-12s- %s\n", "SWITCH 2","2d gfx drawing+displaying");
+    printf("         %-12s- %s\n", "SWITCH 3" ,"swap zorder");
+    printf("         %-12s- %s\n", "SWITCH 4","set scaling");
+    printf("         %-12s- %s\n", "SWITCH 5","get scaling");
+    printf("         %-12s- %s\n","SWITCH 6","pe suspend");
+    printf("         %-12s- %s\n","SWITCH 7","pe resume");
+    printf("         %-12s- %s\n","SWITCH 8","2d gfx unit test");
+    printf("         %-12s- %s\n","SWITCH 11","get plane background color");
+    printf("         %-12s- %s\n","SWITCH 12","set plane background color");
+    printf("         %-12s- %s\n","SWITCH 13","get cpcb background color");
+    printf("         %-12s- %s\n","SWITCH 14","set cpcb background color");
+    printf("         %-12s- %s\n","SWITCH 15","draw a null image");
+    printf("         %-12s- %s\n","SWITCH 16","draw a w*h image with gpu2d");
+    printf("         %-12s- %s\n","SWITCH 17","draw a w*h with no gpu");
+    printf("         %-12s- %s\n","SWITCH 18","draw a full screen rawdata");
+    printf("         %-12s- %s\n","SWITCH 19","get output resolution");
+    printf("         %-12s- %s\n","help","list all supported commands");
+    printf("         %-12s- %s\n","quit","exiting\n");
 
 
 }
 
 
 
-static int ExecuteCommand(char *key)
+static int ExcuteCommand(char *key)
 {
     int	  ret = 0;
     int choice=atoi(key); 
@@ -992,7 +999,7 @@ static int ExecuteCommand(char *key)
     if(choice == 0)
     {
         if (strcmp(key,"0") != 0)
-            choice = 40;     //invalid arg
+            choice = -100;     //invalid arg
      }
 
         switch(choice){
@@ -1050,11 +1057,8 @@ static int ExecuteCommand(char *key)
 	  	case 19:
 		  	ret = get_output_resolution();
 		  	break;
-	  	case 30:
-	  		ShowHelp();
-			break;
 	  	default:
-		 	printf("\n	Invild option\n");
+		 	printf("\n	Invalid option\n");
 		 	break;
 	  }
 
@@ -1062,171 +1066,29 @@ static int ExecuteCommand(char *key)
 
 }
 
-
-static BOOL ParseCommand(char *pCmd)
+int cmd_handler_help_setplane(int argc, char * argv [ ])
 {
-    char *pArg[MAX_ARG_CNT];
-    int argc = 0;
-    //BOOL bValid = FALSE;
-    int i;
-
-    while (*pCmd == 0x20) pCmd++;
-    
-    if (strlen(pCmd) == 0)
-        return TRUE; 
-	
-    if (strcmp(pCmd, "quit") == 0)
-    {	
-        return FALSE;
-    }
-
-    if (strcmp(pCmd, "help") == 0)
-    {
-        pCmd = "30";
-    }
-
-    pArg[argc] = pCmd;
-    argc++;
-    
-    while(*pCmd != 0)
-    {
-        while ((*pCmd != 0x20) && (*pCmd != 0))
-        {
-            pCmd++;
-        }
-
-        if (*pCmd == 0x20)
-        {
-            *pCmd++ = 0;
-            while (*pCmd == 0x20) pCmd++;
-            if (*pCmd != 0)
-            {
-                pArg[argc++] = pCmd;
-            }
-        }
-    }
-
-
-    if(argc != 1)
-    {
-
-        printf("\n	Invalid option\n");
-        return TRUE;
-    }
-	
-    ExecuteCommand(pArg[0]);
-
-  //  pArg[argc] = pCmd;
-  //  argc++;
-
-
-/*
-    if (!bValid)
-    {
-        printf("Invalid command! Type help to see all supported command!\n");
-    }
-*/
-    /*for (i = 0; i < argc; i++)
-    {
-        printf("arg%d = %s\n", i, pArg[i]);
-    }*/
-
-    return TRUE;
+	ShowHelp();
+	return 0;
 }
 
-static int GetCommand(char *pCmd, int iMaxSize)
+int cmd_handler_switch_setplane(int argc, char * argv [ ])
 {
-    int count;
-    char ch;
-
-    if ((pCmd == 0) || (iMaxSize == 0))
-    {
-        return 0;
-    }
-
-    count = 0;
-    iMaxSize--;
-    while((ch = getchar()) != 0x0a)
-    {
-        if (count < iMaxSize)
-        {
-            pCmd[count++] = ch;
-        }
-    }
-
-    pCmd[count] = '\0';
-
-    return count;
-}
-
-
-
-int SetPlaneMain(int argc, char *argv[])
-{
-
-	  int	  ret = 0;
+	HRESULT rc;
 	
-	  ret = MV_OSAL_Init();
-	  if (ret){
-		  printf("MV_OSAL_INIT faild, ret=0x%x\n", ret);
-		  return ret;
-	  }
-	  printf("MV_OSAL_Init success!\n");
-	
-	  ret = MV_PE_Init(&hPE);
-	  if (ret){
-		   printf("PE faild, ret=0x%x\n", ret);
-			   return ret;
-	  }
-	  printf("MV_PE_Init success!\n");
-	
-	
-	
-	if(argc == 1)
-	{	
-    		//HRESULT rc = 0;
-   		char    Cmd[MAX_CMD_LEN];
-    		int len;
-
-    		printf("***********************************************\n");
-    		printf("*      Set Plane  *\n");
-    		printf("***********************************************\n\n");
-
-   	 	do
-    		{
-        			printf(SetPlane_PROMPT);
-        			len = GetCommand(Cmd, MAX_CMD_LEN);
-        			//printf("Command = %s, len = %d\n", Cmd, len);
-    		}
-   	 	while (ParseCommand(Cmd));
+	if (argc == 2)
+	{
+		rc = ExcuteCommand(argv[1]);
 	}
 
-
-	else if(argc == 2)
-		{
-			if(strcmp(argv[1],"help") == 0)
-			{
-				argv[1] = "30";
-			}
-
-			if (strcmp(argv[1],"quit") == 0)
-				goto __exit;
-			
-			ret = ExecuteCommand(argv[1]);		
-		}
-
 	else
-		{
-			printf("\n	Invild option\n");
-			ret = -1;
-		}
+	{
+		printf("Invalid arguments\n");
+		rc = -1;
 
-__exit:
+	}			
 
-    MV_PE_Remove(hPE);
-    hPE = NULL;
-    MV_OSAL_Exit();
-
-    printf("exit!\n");
-    return ret;
+	return rc;
+	
 }
+

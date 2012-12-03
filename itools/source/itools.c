@@ -23,7 +23,10 @@ static PROMPT gPrompt[] = {
     {"itools", "ITOOLS:$ "},
     {"mvlog", "ITOOLS:$ =>MVLOG:$ "},
     {"capframe", "ITOOLS:$ =>CAPFRAME:$ "},
-    	{"vdmdump","ITOOLS:$ =>VDMDUMP:$ "},
+    {"vdmdump","ITOOLS:$ =>VDMDUMP:$ "},
+    {"regctl","ITOOLS:$ =>REGCTL:$"},
+    {"setres", "ITOOLS:$ =>SETRES:$"},
+    {"setplane","ITOOLS:$ =>SETPLANE:$"},
 
 };
 
@@ -33,10 +36,10 @@ static CMD_HANDLER gCmdHandler_itools[] = {
     {"help", cmd_handler_help_itools, "List all supported tools"},
     {"mvlog", cmd_handler_mvlog_itools, "mvlog tool"},
     {"vdmdump", cmd_handler_vdmdump_itools, "vdm_dump tool"},
-    // {"setres", cmd_handler_setres_itools, "set_res tool(set HDMI output resolution)"},
+    {"setres", cmd_handler_setres_itools, "set_res tool(set HDMI output resolution)"},
     {"capframe", cmd_handler_capframe_itools, "capframe tool"},
-    // {"setplane", cmd_handler_setplane_itools, "setplane tool"},
-    // {"regctl", cmd_handler_regctl_itools, "regctl tool"},
+    {"setplane", cmd_handler_setplane_itools, "setplane tool"},
+    {"regctl", cmd_handler_regctl_itools, "regctl tool"},
 
     //extension and alias
     // {"NULL", cmd_handler_NULL, ""},
@@ -44,6 +47,7 @@ static CMD_HANDLER gCmdHandler_itools[] = {
 
 static int iNumCmd_itools = sizeof(gCmdHandler_itools)/sizeof(CMD_HANDLER);
 
+//note: iNumCmd no use now, since it is a variation and can't initialize static(extern) variation
 extern CMD_HANDLER gCmdHandler_mvlog[];   //wrong for CMD_HANDLER *gCmdHandler_mvlog (ÖØÉùÃ÷)
 extern int iNumCmd_mvlog;
 
@@ -53,43 +57,56 @@ extern int iNumCmd_capframe;
 extern CMD_HANDLER gCmdHandler_vdmdump[];
 extern int iNumCmd_vdmdump;
 
-static TOOL_CMD_HANDLER gToolCmdHandler[]={
-    {"mvlog",gCmdHandler_mvlog,16},   //iNumCmd_mvlog
-    {"itools",gCmdHandler_itools,2},    //iNumCmd_itools
-    {"capframe",gCmdHandler_capframe,7}, 
-    	{"vdmdump",gCmdHandler_vdmdump,3},
+extern CMD_HANDLER gCmdHandler_regctl[];
+extern int iNumCmd_regctl;
 
+extern CMD_HANDLER gCmdHandler_setres[];
+extern int iNumCmd_setres;
+
+extern CMD_HANDLER gCmdHandler_setplane[];
+extern int iNumCmd_setres;
+
+static TOOL_CMD_HANDLER gToolCmdHandler[]={
+    {"mvlog", gCmdHandler_mvlog, 16},   //iNumCmd_mvlog
+    {"itools", gCmdHandler_itools, 2},    //iNumCmd_itools
+    {"capframe", gCmdHandler_capframe, 7}, 
+    {"vdmdump", gCmdHandler_vdmdump, 3},
+    {"regctl", gCmdHandler_regctl, 3},
+    {"setres", gCmdHandler_setres, 2},
+    {"setplane", gCmdHandler_setplane, 2},
+    
 };
 
 static int iNumToolCmd = sizeof(gToolCmdHandler)/sizeof(TOOL_CMD_HANDLER);
 
 static int INIT()
 {
-    HRESULT hr;
+  	HRESULT hr;
 
   #ifndef WIN32
-    MV_OSAL_Init();
-    if ((hr = MV_PE_Init(&gPe)) != S_OK)
-    {
-        printf("PE Initialize failed! hr = 0x%x\n", hr);
-		MV_PE_Remove(gPe);
-        MV_OSAL_Exit();
-        return -1;
-    }
+    	MV_OSAL_Init();
+   	 if ((hr = MV_PE_Init(&gPe)) != S_OK)
+   	 {
+        		printf("PE Initialize failed! hr = 0x%x\n", hr);
+        		MV_PE_Remove(gPe);
+        		MV_OSAL_Exit();
+       		 return -1;
+    	}
 
 	if ((hr = MV_PE_AVIP_Open(gPe, &ghVIP)) != S_OK)
-    {
-        printf("Unable to open VIP Error = 0x%x\n", hr);
+    	{
+        		printf("Unable to open VIP Error = 0x%x\n", hr);
 		MV_PE_Remove(gPe);
-        MV_OSAL_Exit();
-        return -1;
-    }
+       		MV_OSAL_Exit();
+        		return -1;
+    	}
+	
   #else
-    MV_Debug_Initialize(DBG_ERROR);
+    		MV_Debug_Initialize(DBG_ERROR);
 
-  #endif    
+ #endif    
 
-     return 0;
+     	return 0;
 }
 
 static void EXIT()
@@ -145,7 +162,7 @@ static int cmd_handler_capframe_itools(int argc,char * argv [])
 
 }
 
-static int cmd_handler_vdmdump(int argc, char * argv [ ])
+static int cmd_handler_vdmdump_itools(int argc, char * argv [ ])
 {
 
 	if (argc >= 2)
@@ -154,8 +171,42 @@ static int cmd_handler_vdmdump(int argc, char * argv [ ])
         		ItoolsCtrlEntry(argv);
 
     	return 0;
+}
+
+static int cmd_handler_regctl_itools(int argc, char * argv [ ])
+{
+	if (argc >= 2)
+        		ItoolsCommandline(argc, argv);
+    	else
+        		ItoolsCtrlEntry(argv);
+
+    	return 0;
 
 }
+
+static int cmd_handler_setres_itools(int argc, char * argv [ ])
+{
+	if (argc >= 2)
+        		ItoolsCommandline(argc, argv);
+    	else
+    	{			
+		InitHdmiServe();  	//without arguments,supply full HDMI service
+		ItoolsCtrlEntry(argv);
+    	}
+
+    	return 0;
+}
+
+static int cmd_handler_setplane_itools(int argc, char * argv [ ])
+{
+	if (argc >= 2)
+        		ItoolsCommandline(argc, argv);
+    	else
+        		ItoolsCtrlEntry(argv);
+
+    	return 0;
+}
+
 
 static BOOL ParseCommand(char *argv[],char *pCmd)
 {
