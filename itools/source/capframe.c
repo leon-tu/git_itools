@@ -52,7 +52,20 @@ typedef struct CapturePara
 static CAPTURE_PARA gCurrentPara;
 
 extern HANDLE gPe;
-extern HANDLE ghVIP;
+static HANDLE ghVIP;
+
+int Init_capframe()
+{	
+	HRESULT hr;
+	if ((hr = MV_PE_AVIP_Open(gPe, &ghVIP)) != S_OK)
+    	{
+        		printf("Unable to open VIP Error = 0x%x\n", hr);
+        		return -1;
+    	}
+
+	init_cap_arg();
+	cmd_handler_getarg_capframe(0,NULL);
+}
 
 int cmd_handler_setmode_capframe(int argc, char *argv[])
 {

@@ -12,7 +12,7 @@
 #define INVALID_ARGUMENT  printf("Invalid argument!\n")
 
 HANDLE gPe;
-HANDLE ghVIP;
+
 static int GetCommand(char *pCmd, int iMaxSize);
 static BOOL ParseCommand(char *argv[],char *pCmd);
 static CMD_HANDLER* ParseCommandFromShell(char *argv[]);
@@ -49,31 +49,32 @@ static int iNumCmd_itools = sizeof(gCmdHandler_itools)/sizeof(CMD_HANDLER);
 
 //note: iNumCmd no use now, since it is a variation and can't initialize static(extern) variation
 extern CMD_HANDLER gCmdHandler_mvlog[];   //wrong for CMD_HANDLER *gCmdHandler_mvlog (ÖØÉùÃ÷)
-extern int iNumCmd_mvlog;
+//extern int iNumCmd_mvlog;
 
 extern CMD_HANDLER gCmdHandler_capframe[];
-extern int iNumCmd_capframe;
+//extern int iNumCmd_capframe;
 
 extern CMD_HANDLER gCmdHandler_vdmdump[];
-extern int iNumCmd_vdmdump;
+//extern int iNumCmd_vdmdump;
 
 extern CMD_HANDLER gCmdHandler_regctl[];
-extern int iNumCmd_regctl;
+//extern int iNumCmd_regctl;
 
 extern CMD_HANDLER gCmdHandler_setres[];
-extern int iNumCmd_setres;
+//extern int iNumCmd_setres;
 
 extern CMD_HANDLER gCmdHandler_setplane[];
-extern int iNumCmd_setres;
+//extern int iNumCmd_setplane;
 
 static TOOL_CMD_HANDLER gToolCmdHandler[]={
-    {"mvlog", gCmdHandler_mvlog, 16},   //iNumCmd_mvlog
-    {"itools", gCmdHandler_itools, 7},    //iNumCmd_itools
-    {"capframe", gCmdHandler_capframe, 7}, 
-    {"vdmdump", gCmdHandler_vdmdump, 3},
-    {"regctl", gCmdHandler_regctl, 3},
-    {"setres", gCmdHandler_setres, 2},
-    {"setplane", gCmdHandler_setplane, 2},
+    {"mvlog", gCmdHandler_mvlog, 16 },    //iNumCmd_mvlog 16 ; 
+    //try sizeof(gCmdHandler_mvlog)/sizeof(CMD_HANDLER) failed, since using extern CMD_HANDLER gCmdHandler_mvlog[], gCmdHandler_mvlog is a variable
+    {"itools", gCmdHandler_itools, 7 },     //iNumCmd_itools 7
+    {"capframe", gCmdHandler_capframe, 7 },  //7
+    {"vdmdump", gCmdHandler_vdmdump, 3},	//3
+    {"regctl", gCmdHandler_regctl, 3},  //3 
+    {"setres", gCmdHandler_setres, 2},  //2
+    {"setplane", gCmdHandler_setplane, 2 },  //2
     
 };
 
@@ -91,14 +92,6 @@ static int INIT()
         		MV_PE_Remove(gPe);
         		MV_OSAL_Exit();
        		 return -1;
-    	}
-
-	if ((hr = MV_PE_AVIP_Open(gPe, &ghVIP)) != S_OK)
-    	{
-        		printf("Unable to open VIP Error = 0x%x\n", hr);
-		MV_PE_Remove(gPe);
-       		MV_OSAL_Exit();
-        		return -1;
     	}
 	
   #else
@@ -150,9 +143,11 @@ static int cmd_handler_mvlog_itools(int argc, char *argv[])
 
 static int cmd_handler_capframe_itools(int argc,char * argv [])
 {
-	init_cap_arg();
-	cmd_handler_getarg_capframe(0,NULL);
-
+	if(Init_capframe() == -1)
+	{
+		return -1;
+	}
+	
 	if (argc >= 2)
         		ItoolsCommandline(argc, argv);
     	else
