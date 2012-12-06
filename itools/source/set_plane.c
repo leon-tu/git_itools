@@ -984,7 +984,7 @@ static void ShowHelp()
     printf("         %-12s- %s\n","switch 18","draw a full screen rawdata");
     printf("         %-12s- %s\n","switch 19","get output resolution");
     printf("         %-12s- %s\n","help","list all supported commands");
-    printf("         %-12s- %s\n","quit","exiting\n");
+    printf("         %-12s- %s\n","quit","exiting\n\n");
 
 
 }

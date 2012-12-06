@@ -362,10 +362,10 @@ static const struct option CommandOption[] = {
 //static void display_usage(void);
 
 CMD_HANDLER gCmdHandler_regctl[] = {
+	{"help", cmd_handler_help_regctl, REGCTL_MAN_HELP},
 	{"read", cmd_handler_read_regctl, REGCTL_MAN_READ},
 	{"write", cmd_handler_write_regctl, REGCTL_MAN_WRITE},
 	{"test", cmd_handler_test_regctl, REGCTL_MAN_TEST},
-	{"help", cmd_handler_help_regctl, REGCTL_MAN_HELP},
 
 };
 

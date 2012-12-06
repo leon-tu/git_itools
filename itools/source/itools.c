@@ -24,9 +24,9 @@ static PROMPT gPrompt[] = {
     {"mvlog", "ITOOLS:$ =>MVLOG:$ "},
     {"capframe", "ITOOLS:$ =>CAPFRAME:$ "},
     {"vdmdump","ITOOLS:$ =>VDMDUMP:$ "},
-    {"regctl","ITOOLS:$ =>REGCTL:$"},
-    {"setres", "ITOOLS:$ =>SETRES:$"},
-    {"setplane","ITOOLS:$ =>SETPLANE:$"},
+    {"regctl","ITOOLS:$ =>REGCTL:$ "},
+    {"setres", "ITOOLS:$ =>SETRES:$ "},
+    {"setplane","ITOOLS:$ =>SETPLANE: $ "},
 
 };
 
@@ -72,7 +72,7 @@ static TOOL_CMD_HANDLER gToolCmdHandler[]={
     {"itools", gCmdHandler_itools, 7 },     //iNumCmd_itools 7
     {"capframe", gCmdHandler_capframe, 7 },  //7
     {"vdmdump", gCmdHandler_vdmdump, 3},	//3
-    {"regctl", gCmdHandler_regctl, 3},  //3 
+    {"regctl", gCmdHandler_regctl, 4},  //3 
     {"setres", gCmdHandler_setres, 2},  //2
     {"setplane", gCmdHandler_setplane, 2 },  //2
     
@@ -132,6 +132,10 @@ static int cmd_handler_help_itools(int argc, char *argv[])
 
 static int cmd_handler_mvlog_itools(int argc, char *argv[])
 {   
+    printf("***********************************************\n");
+    printf("*       MARVELL Galois PE Debug Control       *\n");
+    printf("***********************************************\n");
+	
     if (argc >= 2)
         ItoolsCommandline(argc, argv);
     else
@@ -143,6 +147,9 @@ static int cmd_handler_mvlog_itools(int argc, char *argv[])
 
 static int cmd_handler_capframe_itools(int argc,char * argv [])
 {
+	printf("*****************************************************\n");
+    	printf("*  Marvell Galois Capture Frame from VIP  *\n");
+   	 printf("******************************************************\n");
 	if(Init_capframe() == -1)
 	{
 		return -1;
@@ -159,7 +166,10 @@ static int cmd_handler_capframe_itools(int argc,char * argv [])
 
 static int cmd_handler_vdmdump_itools(int argc, char * argv [ ])
 {
-
+	printf("***********************************************\n");
+    	printf("*       MARVELL Galois VDM Dump Control       *\n");
+    	printf("***********************************************\n");
+		
 	if (argc >= 2)
         		ItoolsCommandline(argc, argv);
     	else
@@ -170,6 +180,10 @@ static int cmd_handler_vdmdump_itools(int argc, char * argv [ ])
 
 static int cmd_handler_regctl_itools(int argc, char * argv [ ])
 {
+	printf("***********************************************\n");
+    	printf("*	Berlin Register Control	*\n");
+    	printf("***********************************************\n");
+		
 	if (argc >= 2)
         		ItoolsCommandline(argc, argv);
     	else
@@ -181,6 +195,10 @@ static int cmd_handler_regctl_itools(int argc, char * argv [ ])
 
 static int cmd_handler_setres_itools(int argc, char * argv [ ])
 {
+	printf("***********************************************\n");
+        	printf("*	Berlin HDMI Service Sample Code	*\n");
+        	printf("***********************************************\n");
+
 	if (argc >= 2)
         		ItoolsCommandline(argc, argv);
     	else
@@ -194,6 +212,10 @@ static int cmd_handler_setres_itools(int argc, char * argv [ ])
 
 static int cmd_handler_setplane_itools(int argc, char * argv [ ])
 {
+	printf("***********************************************\n");
+    	printf("*      Set VPP Plane Status  *\n");
+    	printf("***********************************************\n\n");
+		
 	if (argc >= 2)
         		ItoolsCommandline(argc, argv);
     	else
@@ -317,11 +339,7 @@ int ItoolsCtrlEntry(char *argv[])
     HRESULT rc = 0;
     char    Cmd[MAX_CMD_LEN];
     int len;
-
-    printf("***********************************************\n");
-    printf("*       MARVELL Galois ITOOLS Control_CtrlEntry      *\n");
-    printf("***********************************************\n\n");
-
+	
     do
     {   
         int i;
@@ -386,10 +404,6 @@ int ItoolsCommandline(int argc, char *argv[])
     HRESULT rc = 0;
     CMD_HANDLER *pCmdHandler = 0;
 
-    printf("***********************************************\n");
-    printf("*       MARVELL Galois ITOOLS Control_commandline      *\n");
-    printf("***********************************************\n\n");
-
     pCmdHandler = ParseCommandFromShell(&argv[0]);   //argv[1] ->[0]
     if (pCmdHandler)
     {
@@ -416,7 +430,10 @@ static void debug_signal_handler()
 int main(int argc, char *argv[])
 {
     //signal(SIGINT, debug_signal_handler);
-
+    printf("***********************************************\n");
+    printf("*       MARVELL Galois Itools  *\n");
+    printf("***********************************************\n");
+	
     if(INIT() == -1)
     {
         return -1;
