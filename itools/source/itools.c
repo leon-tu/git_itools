@@ -26,7 +26,7 @@ static PROMPT gPrompt[] = {
     {"vdmdump","ITOOLS:$ =>VDMDUMP:$ "},
     {"regctl","ITOOLS:$ =>REGCTL:$ "},
     {"setres", "ITOOLS:$ =>SETRES:$ "},
-    {"setplane","ITOOLS:$ =>SETPLANE: $ "},
+    {"setplane","ITOOLS:$ =>SETPLANE:$ "},
 
 };
 
@@ -40,6 +40,7 @@ static CMD_HANDLER gCmdHandler_itools[] = {
     {"capframe", cmd_handler_capframe_itools, "capframe tool"},
     {"setplane", cmd_handler_setplane_itools, "setplane tool"},
     {"regctl", cmd_handler_regctl_itools, "regctl tool"},
+    	//{"quit",NULL,"return to previous status"},
 
     //extension and alias
     // {"NULL", cmd_handler_NULL, ""},
@@ -117,14 +118,15 @@ static int cmd_handler_help_itools(int argc, char *argv[])
     int i;
     printf("Marvell Galois Integrated Tools\n\n");
     printf("  Version: %s\n", ITOOLS_REV);
-    printf("  Author: \n");
+    //printf("  Author: \n");
     printf("  Usage: 1. itools tool_name command [arg1] [arg2] ...\n\n");
     printf("         2. itools; \n             tool_name command [arg1] [arg2] ...\n\n");
     printf("         3. itools; \n             tool_name; \n		  command [arg1] [arg2] ...\n\n");
-    printf("  All integrated tools:\n\n");
+    printf("	       All tools contain the unified commands \"help\" and \"quit\"\n");
+    printf("	All integrated tools:\n\n");
     for (i = 0; i < iNumCmd_itools; i++)
     {
-        printf("         %-12s- %s\n", gCmdHandler_itools[i].pCmd, gCmdHandler_itools[i].pHelp);
+   	printf("         %-12s- %s\n", gCmdHandler_itools[i].pCmd, gCmdHandler_itools[i].pHelp);
     }
     printf("\n");
     return 0;
