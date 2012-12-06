@@ -17,13 +17,13 @@ typedef struct tagCmdHandler
 } CMD_HANDLER;
 
 
-typedef struct tagToolCmdHandler
+typedef struct tagToolCmdHandlers
 {
     char * pTool;
     CMD_HANDLER *pCmdHandler;
     int iNumCmd;
 
-}TOOL_CMD_HANDLER;
+}TOOL_CMD_HANDLERs;
 
 
 #endif

@@ -66,7 +66,7 @@ extern CMD_HANDLER gCmdHandler_setres[];
 extern CMD_HANDLER gCmdHandler_setplane[];
 //extern int iNumCmd_setplane;
 
-static TOOL_CMD_HANDLER gToolCmdHandler[]={
+static TOOL_CMD_HANDLERs gToolCmdHandler[]={
     {"mvlog", gCmdHandler_mvlog, 16 },    //iNumCmd_mvlog 16 ; 
     //try sizeof(gCmdHandler_mvlog)/sizeof(CMD_HANDLER) failed, since using extern CMD_HANDLER gCmdHandler_mvlog[], gCmdHandler_mvlog is a variable
     {"itools", gCmdHandler_itools, 7 },     //iNumCmd_itools 7
@@ -78,7 +78,7 @@ static TOOL_CMD_HANDLER gToolCmdHandler[]={
     
 };
 
-static int iNumToolCmd = sizeof(gToolCmdHandler)/sizeof(TOOL_CMD_HANDLER);
+static int iNumToolCmd = sizeof(gToolCmdHandler)/sizeof(TOOL_CMD_HANDLERs);
 
 static int INIT()
 {
@@ -134,7 +134,7 @@ static int cmd_handler_mvlog_itools(int argc, char *argv[])
 {   
     printf("***********************************************\n");
     printf("*       MARVELL Galois PE Debug Control       *\n");
-    printf("***********************************************\n");
+    printf("***********************************************\n\n");
 	
     if (argc >= 2)
         ItoolsCommandline(argc, argv);
@@ -149,7 +149,7 @@ static int cmd_handler_capframe_itools(int argc,char * argv [])
 {
 	printf("*****************************************************\n");
     	printf("*  Marvell Galois Capture Frame from VIP  *\n");
-   	 printf("******************************************************\n");
+   	 printf("******************************************************\n\n");
 	if(Init_capframe() == -1)
 	{
 		return -1;
@@ -168,7 +168,7 @@ static int cmd_handler_vdmdump_itools(int argc, char * argv [ ])
 {
 	printf("***********************************************\n");
     	printf("*       MARVELL Galois VDM Dump Control       *\n");
-    	printf("***********************************************\n");
+    	printf("***********************************************\n\n");
 		
 	if (argc >= 2)
         		ItoolsCommandline(argc, argv);
@@ -182,7 +182,7 @@ static int cmd_handler_regctl_itools(int argc, char * argv [ ])
 {
 	printf("***********************************************\n");
     	printf("*	Berlin Register Control	*\n");
-    	printf("***********************************************\n");
+    	printf("***********************************************\n\n");
 		
 	if (argc >= 2)
         		ItoolsCommandline(argc, argv);
@@ -197,7 +197,7 @@ static int cmd_handler_setres_itools(int argc, char * argv [ ])
 {
 	printf("***********************************************\n");
         	printf("*	Berlin HDMI Service Sample Code	*\n");
-        	printf("***********************************************\n");
+        	printf("***********************************************\n\n");
 
 	if (argc >= 2)
         		ItoolsCommandline(argc, argv);
@@ -439,6 +439,11 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+    if(strcmp(argv[0], "itools") != 0)
+    {
+    	argv[0] = "itools";
+    }
+	
     if (argc >= 2)
         ItoolsCommandline(argc, argv);
     else
