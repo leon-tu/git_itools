@@ -41,7 +41,7 @@ CMD_HANDLER gCmdHandler_setres[] = {
 		{"switch", cmd_handler_switch_setres, "parameter router"},
 };
 
-int iNumCmd_setres = sizeof(gCmdHandler_setres)/sizeof(CMD_HANDLER);
+//int iNumCmd_setres = sizeof(gCmdHandler_setres)/sizeof(CMD_HANDLER);
 
 extern HANDLE  gPe;
 
