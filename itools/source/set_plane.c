@@ -961,8 +961,8 @@ static void ShowHelp()
      printf("  Berlin SetPlane Control\n\n");
     // printf("  Version: %s\n", version);
        // printf("  Author: \n");
-    printf("  Usage: 1. setplane command \n\n");
-    printf("         2. setplane; \n             command \n\n");
+    printf("  Usage: 1. setplane command [argc1] [argc2]...\n\n");
+    printf("         2. setplane; \n             command [argc1] [argc2]...\n\n");
     
     printf("  All supported commands:\n\n");
     printf("         %-12s- %s\n", "switch 0","get plane information");

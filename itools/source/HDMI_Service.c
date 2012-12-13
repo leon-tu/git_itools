@@ -672,7 +672,7 @@ When the application is terminated with \"quit\", PE and OSAL will be destroyed.
         "                 #Set HDMI output resolution to 1280X720 60Hz\n"
         "                 HDMI_RES> -m\n"
         "                 #Exit the demostration\n"
-        "                 HDMI_RES> -Q\n"
+        "                 HDMI_RES> quit\n"
         "         2. For resolution setting utility:\n"
         "             When the application is excuted with argument, it acts as a HDMI output resolution setting tool, and only takes care of the resolution setting from user. \
 It exits automatically when the resolution setting is finished and can be used both in command line and scripts, Please be notified that \

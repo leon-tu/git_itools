@@ -343,12 +343,12 @@ static int output_type_ = REGCTL_O_ASCII;
 static int debug_ = 0;
 static int verbose_ = 0;
 
-#define REGCTL_MAN_READ			"   read [ADDR] [SIZE]\tdump registers from address [addr] with [SIZE], default size is 16\n\
-   read [ADDR] [SIZE]  [--binary|-b] [--output|-o] [FILE], default binary save in ./regctl_data.bin, please use [--output|-o] to specify output file path\n"
+#define REGCTL_MAN_READ			"read [ADDR] [SIZE] [--binary|-b] [--output|-o] [FILE]\tdump registers from address [addr] with [SIZE],\n\ 
+                                 default size is 16,default binary save in ./regctl_data.bin, please use [--output|-o] to specify output file path\n"
 
-#define REGCTL_MAN_WRITE 		"   write [ADDR] [VAL]\twritw regster at address with value [VAL] aligned"
-#define REGCTL_MAN_HELP			"   help [COMMAND]    \tshow this help, and show usage of COMMAND"
-#define REGCTL_MAN_TEST		"devmem_assess_test(0,0)"
+#define REGCTL_MAN_WRITE 		"write [ADDR] [VAL]\twritw regster at address with value [VAL] aligned"
+#define REGCTL_MAN_HELP			"list all supported commands"
+#define REGCTL_MAN_TEST		    "devmem_assess_test(0,0)"
 
 static const char *optString = "bo:v?";
 static const struct option CommandOption[] = {
