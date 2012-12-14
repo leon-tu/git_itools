@@ -30,7 +30,7 @@
 #include "tsp_fw_spec.h"
 #include "itools_type.h"
 
-typedef	unsigned int        BOOL;
+//typedef	unsigned int        BOOL;
 #define TRUE                (1)
 #define FALSE               (0)
 

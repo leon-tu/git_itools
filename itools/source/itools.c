@@ -74,7 +74,7 @@ extern CMD_HANDLER gCmdHandler_tsp[];
 static TOOL_CMD_HANDLERs gToolCmdHandler[]={
     {"mvlog", gCmdHandler_mvlog, 16 },    //iNumCmd_mvlog 16 ; 
     //try sizeof(gCmdHandler_mvlog)/sizeof(CMD_HANDLER) failed, since using extern CMD_HANDLER gCmdHandler_mvlog[], gCmdHandler_mvlog is a variable
-    {"itools", gCmdHandler_itools, 7 },     //iNumCmd_itools 7
+    {"itools", gCmdHandler_itools, 8 },     //iNumCmd_itools 7
     {"capframe", gCmdHandler_capframe, 7 },  //7
     {"vdmdump", gCmdHandler_vdmdump, 3},	//3
     {"regctl", gCmdHandler_regctl, 4},  //3 

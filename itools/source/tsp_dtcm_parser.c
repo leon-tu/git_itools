@@ -469,6 +469,7 @@ static void TSPDTCM_ItemShow(DTCM_SHOW_MODE mode, unsigned char *ptr, unsigned c
         {
             TSP_OUT("     %d. %s\n", DTCMItemTable[i].index, DTCMItemTable[i].ItemName);
         }
+        TSP_OUT("\nYou can use the command like \"show Localdata\"");
         TSP_OUT("\n\n");
     }
     
@@ -601,19 +602,14 @@ int cmd_handler_openfile_tsp(int argc, char *argv[])
         fclose(fpSaveFile);
     }
     
-    fpSaveFile = fopen(pArg[1], "wt+");
+    fpSaveFile = fopen(argv[1], "wt+");
     return 0;
 }    
 
 
 int cmd_handler_show_tsp(int argc ,char *argv[])
 {
-    if(argc != 2)
-    {
-        INVALID_ARGUMENT;
-        return -1;
-    }
-    TSPDTCM_ItemShow(ONE_SHOT_MODE, gptrMemMap, tolower(pArg[1]));
+    TSPDTCM_ItemShow(ONE_SHOT_MODE, gptrMemMap, tolower(argv[1]));
     return 0;
 }
 
@@ -630,7 +626,7 @@ int cmd_handler_detect_tsp(int argc, char *argv[])
 } 
 
 
-int cmd_handler_help_tsp(int agrc, char *argv[])
+int cmd_handler_help_tsp(int argc, char *argv[])
 {
     if(argc != 1)
     {

@@ -65,6 +65,7 @@ int Init_capframe()
 
 	init_cap_arg();
 	cmd_handler_getarg_capframe(0,NULL);
+    return 0;
 }
 
 int cmd_handler_setmode_capframe(int argc, char *argv[])
