@@ -453,7 +453,7 @@ static DTCM_ITEM_CTX *tspdtcm_inquire_item_entry(unsigned char *item)
 static void TSPDTCM_ItemShow(DTCM_SHOW_MODE mode, unsigned char *ptr, unsigned char *item)
 {
     SIE_TspDtcmGlobal *pShadow = (SIE_TspDtcmGlobal*)ptr;
-    unsigned int i = 0;
+    //unsigned int i = 0;
     DTCM_ITEM_CTX *pDTCMItemCtx = 0;
 
     pDTCMItemCtx = tspdtcm_inquire_item_entry(item);
@@ -462,6 +462,8 @@ static void TSPDTCM_ItemShow(DTCM_SHOW_MODE mode, unsigned char *ptr, unsigned c
     {
         pDTCMItemCtx->tspdtcm_item_show(mode, ptr);
     }
+
+/*
     else
     {
         TSP_OUT("|---------support Item show as below-----------------|\n");
@@ -472,7 +474,12 @@ static void TSPDTCM_ItemShow(DTCM_SHOW_MODE mode, unsigned char *ptr, unsigned c
         TSP_OUT("\nYou can use the command like \"show Localdata\"");
         TSP_OUT("\n\n");
     }
-    
+ */
+    else
+    {
+        TSP_OUT("\nInvalid arguments! You can only input command \"show\" to see supported arguments. \n");
+
+    }
     return;
 }
 
@@ -608,7 +615,26 @@ int cmd_handler_openfile_tsp(int argc, char *argv[])
 
 
 int cmd_handler_show_tsp(int argc ,char *argv[])
-{
+{   
+    int i;
+    if(argc == 1)
+    {
+        TSP_OUT("|---------support Item show as below-----------------|\n");
+        for(i=0; i<DTCM_ITEM_NUM; i++)
+        {
+            TSP_OUT("     %d. %s\n", DTCMItemTable[i].index, DTCMItemTable[i].ItemName);
+        }
+        TSP_OUT("\nYou can use the command like \"show Localdata\"");
+        TSP_OUT("\n\n"); 
+
+    }
+
+
+    else if(argc != 2)
+    {
+        INVALID_ARGUMENT;
+        return -1;
+    }
     TSPDTCM_ItemShow(ONE_SHOT_MODE, gptrMemMap, tolower(argv[1]));
     return 0;
 }

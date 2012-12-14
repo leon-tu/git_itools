@@ -446,6 +446,8 @@ int cmd_handler_read_regctl(int argc, char *argv[])
 	//	printf("argv[%d]:%s\n", longIndex, argv[longIndex]);
 	//printf("\n");
 
+    DebugVerboseSet(argc,argv);         //set debug and verbose value at the begining of each command
+    
 	if (argc == 2) {
 //      printf("argc[1]:%s\n", argv[1]);
 		addr = myatol(argv[1]);
@@ -531,6 +533,8 @@ int cmd_handler_write_regctl(int argc, char *argv[])
 	int longIndex = 0, i;
 	int opt = 0;
 	char *file_path = "./regctl_data.bin";
+
+    DebugVerboseSet(argc,argv);         //set debug and verbose value at the begining of each command
 
 	if (argc == 3) {
         addr = myatol(argv[1]);
