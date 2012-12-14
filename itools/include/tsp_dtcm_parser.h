@@ -28,6 +28,7 @@
 #define __TSP_DTCM_PARSER_H__ 
 
 #include "tsp_fw_spec.h"
+#include "itools_type.h"
 
 typedef	unsigned int        BOOL;
 #define TRUE                (1)
@@ -112,16 +113,8 @@ typedef enum _dtcm_show_mode_
     ONE_SHOT_MODE = 0x1,
 } DTCM_SHOW_MODE;
 
-typedef int (*CMDFUNC)(int argc, char *argv[]);
+
 typedef int (*ItemShowFunc)(DTCM_SHOW_MODE mode, SIE_TspDtcmGlobal *pShadow);
-
-
-typedef struct tagCmdHandler
-{
-    char *pCmd;
-    CMDFUNC Handler;
-    char *pHelp;
-} CMD_HANDLER;
 
 typedef struct tagItemCtx
 {
@@ -130,6 +123,15 @@ typedef struct tagItemCtx
     ItemShowFunc tspdtcm_item_show;
 } DTCM_ITEM_CTX;
 
+
+int cmd_handler_SetCtrlWord_tsp(int argc,char * argv [ ]);
+unsigned int cmd_handler_GetCtrlWord_tsp(int argc,char * argv [ ]);
+int cmd_handler_openfile_tsp(int argc,char * argv [ ]);
+int cmd_handler_show_tsp(int argc,char * argv [ ]);
+int cmd_handler_detect_tsp(int argc,char * argv [ ]);
+int cmd_handler_help_tsp(int agrc,char * argv [ ]);
+int InitTsp();
+void ExitTsp();
 
 
 #endif

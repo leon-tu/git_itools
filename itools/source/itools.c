@@ -27,6 +27,7 @@ static PROMPT gPrompt[] = {
     {"regctl","ITOOLS:$ =>REGCTL:$ "},
     {"setres", "ITOOLS:$ =>SETRES:$ "},
     {"setplane","ITOOLS:$ =>SETPLANE:$ "},
+    {"tsp","ITOOLS:$ =>TSP-Figo:$ "},
 
 };
 
@@ -40,6 +41,7 @@ static CMD_HANDLER gCmdHandler_itools[] = {
     {"capframe", cmd_handler_capframe_itools, "capframe tool"},
     {"setplane", cmd_handler_setplane_itools, "setplane tool"},
     {"regctl", cmd_handler_regctl_itools, "regctl tool"},
+    {"tsp",cmd_handler_tsp_itools,"Implementation of a console for tsp_dtcm_parser Tool"},
     	//{"quit",NULL,"return to previous status"},
 
     //extension and alias
@@ -67,6 +69,8 @@ extern CMD_HANDLER gCmdHandler_setres[];
 extern CMD_HANDLER gCmdHandler_setplane[];
 //extern int iNumCmd_setplane;
 
+extern CMD_HANDLER gCmdHandler_tsp[];
+
 static TOOL_CMD_HANDLERs gToolCmdHandler[]={
     {"mvlog", gCmdHandler_mvlog, 16 },    //iNumCmd_mvlog 16 ; 
     //try sizeof(gCmdHandler_mvlog)/sizeof(CMD_HANDLER) failed, since using extern CMD_HANDLER gCmdHandler_mvlog[], gCmdHandler_mvlog is a variable
@@ -75,7 +79,8 @@ static TOOL_CMD_HANDLERs gToolCmdHandler[]={
     {"vdmdump", gCmdHandler_vdmdump, 3},	//3
     {"regctl", gCmdHandler_regctl, 4},  //3 
     {"setres", gCmdHandler_setres, 2},  //2
-    {"setplane", gCmdHandler_setplane, 2 },  //2
+    {"setplane", gCmdHandler_setplane, 2 },
+    {"tsp",gCmdHandler_tsp,6},
     
 };
 
@@ -169,8 +174,8 @@ static int cmd_handler_capframe_itools(int argc,char * argv [])
 static int cmd_handler_vdmdump_itools(int argc, char * argv [ ])
 {
 	printf("***********************************************\n");
-    	printf("*       MARVELL Galois VDM Dump Control       *\n");
-    	printf("***********************************************\n\n");
+    printf("*       MARVELL Galois VDM Dump Control       *\n");
+    printf("***********************************************\n\n");
 		
 	if (argc >= 2)
         		ItoolsCommandline(argc, argv);
@@ -183,8 +188,8 @@ static int cmd_handler_vdmdump_itools(int argc, char * argv [ ])
 static int cmd_handler_regctl_itools(int argc, char * argv [ ])
 {
 	printf("***********************************************\n");
-    	printf("*	Berlin Register Control	*\n");
-    	printf("***********************************************\n\n");
+    printf("*	Berlin Register Control	*\n");
+    printf("***********************************************\n\n");
 		
 	if (argc >= 2)
         		ItoolsCommandline(argc, argv);
@@ -198,8 +203,8 @@ static int cmd_handler_regctl_itools(int argc, char * argv [ ])
 static int cmd_handler_setres_itools(int argc, char * argv [ ])
 {
 	printf("***********************************************\n");
-        	printf("*	Berlin HDMI Service Sample Code	*\n");
-        	printf("***********************************************\n\n");
+    printf("*	Berlin HDMI Service Sample Code	*\n");
+    printf("***********************************************\n\n");
 
 	if (argc >= 2)
         		ItoolsCommandline(argc, argv);
@@ -215,17 +220,35 @@ static int cmd_handler_setres_itools(int argc, char * argv [ ])
 static int cmd_handler_setplane_itools(int argc, char * argv [ ])
 {
 	printf("***********************************************\n");
-    	printf("*      Set VPP Plane Status  *\n");
-    	printf("***********************************************\n\n");
+    printf("*      Set VPP Plane Status  *\n");
+    printf("***********************************************\n\n");
 		
 	if (argc >= 2)
-        		ItoolsCommandline(argc, argv);
-    	else
-        		ItoolsCtrlEntry(argv);
+        ItoolsCommandline(argc, argv);
+    else
+        ItoolsCtrlEntry(argv);
 
-    	return 0;
+    return 0;
 }
 
+
+static int cmd_handler_tsp_itools(int argc,char * argv [ ])
+{
+    printf("***********************************************\n");
+    printf("*            TSP_DTCMParserEntry              *\n");
+    printf("***********************************************\n");
+
+    if(InitTsp())
+        return -1;
+
+    if (argc >= 2)
+        ItoolsCommandline(argc, argv);
+    else
+        ItoolsCtrlEntry(argv);
+    
+    ExitTsp();
+    return 0;
+}
 
 static BOOL ParseCommand(char *argv[],char *pCmd)
 {

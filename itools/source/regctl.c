@@ -15,7 +15,7 @@ static char *version = "1.0";
 #define REGCTL_DEVMEM_BASE		0xf6000000
 #define REGCTL_DEVMEM_TAIL		0xf9000000
 
-unsigned int do_devmem_map(off_t offset, int size)
+unsigned int do_devmem_map(off_t offset, int size)      //be used in tsp_dtcm_parser.c
 {
 	char *src_filename = "/dev/mem";
 	unsigned int mem_mapped = 0;
@@ -37,7 +37,7 @@ unsigned int do_devmem_map(off_t offset, int size)
 	return mem_mapped;
 }
 
-int do_devmem_unmap(unsigned int mem_mapped, int size)
+int do_devmem_unmap(unsigned int mem_mapped, int size)      //be used in tsp_dtcm_parser.c
 {
 	if (file_des) {
 		if (mem_mapped != 0xffffffff)

@@ -61,9 +61,8 @@ MODULE_CFLAGS =  \
 	-I$(TOPDIR)/DRM/Cryptolib/include \
 	-I$(TOPDIR)/DRM/DRMCommon/include \
 	-I$(TOPDIR)/DRM/IMAGETOOL_COMMON/include \
-	-I../../DMX/Comps/Tsp/TspDrv/include \
-         -I../../Drivers/Galois_SoC/Common/include
-
+	-I$(TOPDIR)/DMX/Comps/Tsp/TspDrv/include 
+	
 ######################################################
 # Unittest setting
 

@@ -23,10 +23,8 @@
 #include "tsp_fw_spec.h"
 #include "tsp_dtcm_parser.h"
 
-
-#define PROMPT      "TSP-Figo:"
-#define MAX_CMD_LEN 81
-#define MAX_ARG_CNT 8
+#define INVALID_ARGUMENT  printf("Invalid argument!\n")
+#define TSP_VER  1.0
 
 unsigned int gPrintCtrlWord = 0xFFFFFFFF;
 unsigned char* gptrMemMap = NULL;
@@ -56,6 +54,20 @@ static int tspdtcm_AACSDecFilter_show(DTCM_SHOW_MODE mode, SIE_TspDtcmGlobal *pS
 static void TSPDTCM_ItemShow(DTCM_SHOW_MODE mode, unsigned char *ptr, unsigned char *item);
 
 
+CMD_HANDLER gCmdHandler_tsp[] = {
+
+    {"setctrlwd",cmd_handler_SetCtrlWord_tsp,"Set control word"},
+    {"getctrlwd",cmd_handler_GetCtrlWord_tsp,"Get control word"},
+    {"openfile",cmd_handler_openfile_tsp,"Open one log file to save"},
+    {"show",cmd_handler_show_tsp,"Show DTCM content"},
+    {"detect",cmd_handler_detect_tsp,"Detect the change of DTCM content"},
+    {"help",cmd_handler_help_tsp,"List all supported commands"},
+
+};
+
+int iNumCmd_tsp = sizeof(gCmdHandler_tsp)/sizeof(CMD_HANDLER);
+
+
 DTCM_ITEM_CTX DTCMItemTable[] = 
                     {
                         {0, "Localdata",    tspdtcm_Localdata_show},
@@ -70,14 +82,32 @@ DTCM_ITEM_CTX DTCMItemTable[] =
                     };
 #define DTCM_ITEM_NUM  (sizeof(DTCMItemTable)/sizeof(DTCM_ITEM_CTX))
 
-static void TSPDTCM_SetCtrlWord(unsigned int val)
+int cmd_handler_SetCtrlWord_tsp(int argc, char *argv[])
 {
+    if(argc != 2)
+    {
+        INVALID_ARGUMENT;
+        return -1;
+    }
+
+    int val = Str2Num(argv[1]); 
+    
     gPrintCtrlWord = val;
+    return 0;
 }
 
 
-static unsigned int TSPDTCM_GetCtrlWord(void)
+unsigned int cmd_handler_GetCtrlWord_tsp(int argc, char *argv[])
 {
+    if(argc != 1)
+    {
+        INVALID_ARGUMENT;
+        return -1;
+
+    }
+
+    printf("Ctrl Word = 0x%08x\n",gPrintCtrlWord);
+
     return gPrintCtrlWord;
 }
 
@@ -557,149 +587,91 @@ int Str2Num(char str[])
     return(p);
 } 
 
-static void TSPDTCM_Usage(void )
-{
-    printf("usage: The most commonly used commands are:\n");
-    printf("       setctrlwd    Set control word.\n");
-    printf("       getctrlwd    Get control word.\n");
-    printf("       openfile     Open one log file to save.\n");
-    printf("       show         show DTCM content.\n");
-    printf("       detect       Detect the change of DTCM content.\n");
-    printf("       help         show help info.\n");    
-    printf("       exit         Exit...\n");    
-}
 
-static int TSPDTCM_GetCmd(char *pCmd, int iMaxSize)
+int cmd_handler_openfile_tsp(int argc, char *argv[])
 {
-    int count;
-    char ch;
-
-    if ((pCmd == 0) || (iMaxSize == 0))
+    if(argc != 2)
     {
-        return 0;
+        INVALID_ARGUMENT;
+        return -1;
     }
-
-    count = 0;
-    iMaxSize--;
-    while((ch = getchar()) != 0x0a)
-    {
-        if (count < iMaxSize)
-        {
-            pCmd[count++] = ch;
-        }
-    }
-
-    pCmd[count] = '\0';
-
-    return count;
-}
-
-static BOOL TSPDTCM_ExecCmd(char *pCmd)
-{
-    char *pArg[MAX_ARG_CNT];
-    int argc = 0;
-    BOOL bValid = FALSE;
-    int i;
-    int rc = 0;
-
-    while (*pCmd == 0x20) pCmd++;
     
-    if (strlen(pCmd) == 0)
-        return TRUE;
-        
-    pArg[argc] = pCmd;
-    argc++;
-    while(*pCmd != 0)
+    if(fpSaveFile)
     {
-        while ((*pCmd != 0x20) && (*pCmd != 0))
-        {
-            pCmd++;
-        }
+        fclose(fpSaveFile);
+    }
+    
+    fpSaveFile = fopen(pArg[1], "wt+");
+    return 0;
+}    
 
-        if (*pCmd == 0x20)
-        {
-            *pCmd++ = 0;
-            while (*pCmd == 0x20) pCmd++;
-            if (*pCmd != 0)
-            {
-                pArg[argc++] = pCmd;
-            }
-        }
-    }
 
-    if(strcmp(tolower(pArg[0]), "setctrlwd") == 0)
+int cmd_handler_show_tsp(int argc ,char *argv[])
+{
+    if(argc != 2)
     {
-        TSPDTCM_SetCtrlWord(Str2Num(pArg[1]));
+        INVALID_ARGUMENT;
+        return -1;
     }
-    else if(strcmp(tolower(pArg[0]), "getctrlwd") == 0)
-    {
-        printf("Ctrl Word = 0x%08x\n", TSPDTCM_GetCtrlWord());
-    }
-    if(strcmp(tolower(pArg[0]), "openfile") == 0)
-    {
-        if(fpSaveFile)
-        {
-            fclose(fpSaveFile);
-        }
-        fpSaveFile = fopen(pArg[1], "wt+");
-    }    
-    else if(strcmp(tolower(pArg[0]), "show") == 0)
-    {
-        
-        TSPDTCM_ItemShow(ONE_SHOT_MODE, gptrMemMap, tolower(pArg[1]));
-    }
-    else if(strcmp(tolower(pArg[0]), "detect") == 0)
-    {
-        while(1)
-        {
-            /*Show on Detect mode*/
-            TSPDTCM_ContentShow(DETECTED_MODE, gptrMemMap);
-        }
-    }    
-    else if(strcmp(tolower(pArg[0]), "help") == 0)
-    {
-        TSPDTCM_Usage();
-    }
-    else if(strcmp(tolower(pArg[0]), "exit") == 0)
-    {
-        return FALSE;
-    }
-
-    return TRUE;
+    TSPDTCM_ItemShow(ONE_SHOT_MODE, gptrMemMap, tolower(pArg[1]));
+    return 0;
 }
 
 
-int TSP_DTCMParserEntry(void )
+int cmd_handler_detect_tsp(int argc, char *argv[])
 {
-    char Cmd[MAX_CMD_LEN];
-    int len;
-    unsigned int MemMapSize = sizeof(SIE_TspDtcmGlobal)+0x100;
+    while(1)
+    {
+            /*Show on Detect mode*/
+        TSPDTCM_ContentShow(DETECTED_MODE, gptrMemMap);
+    }
+
+    
+} 
+
+
+int cmd_handler_help_tsp(int agrc, char *argv[])
+{
+    if(argc != 1)
+    {
+        INVALID_ARGUMENT;
+        return -1;
+    }
+    
+    int i;
+    printf("Marvell Galois PE Debug Control System\n\n");
+    printf("  Version: %s\n",TSP_VER);
+    printf("  Author: Weizhao Jiang\n");
+    printf("  Usage: 1. tsp command [arg1] [arg2] ...\n\n");
+    printf("         2. tsp; \n             command [arg1] [arg2] ...\n\n");
+    printf("All supported commands:\n\n");
+    for (i = 0; i < iNumCmd_tsp; i++)
+    {
+        printf("         %-12s- %s\n", gCmdHandler_tsp[i].pCmd, gCmdHandler_tsp[i].pHelp);
+    }
+
+   return 0;
+}
+
+
+static unsigned int MemMapSize = sizeof(SIE_TspDtcmGlobal)+0x100;
+
+int InitTsp()
+{
     unsigned int addr = 0xf7a40000;
-
-    printf("***********************************************\n");
-    printf("*            TSP_DTCMParserEntry              *\n");
-    printf("***********************************************\n");
-
     printf("do_devmem_map(0x%x, 0x%x)\n", addr, MemMapSize);
     gptrMemMap = do_devmem_map(addr, MemMapSize);
     if (gptrMemMap == 0xffffffff)
     {
         printf("wrong address return\n");
-        return FALSE;
+        return -1;
     }
 
-    do
-    {
-        printf(PROMPT);
-        len = TSPDTCM_GetCmd(Cmd, MAX_CMD_LEN);
-        printf("Command = %s, len = %d\n", Cmd, len);
-    }
-    while (TRUE == TSPDTCM_ExecCmd(Cmd));
-
-
-    do_devmem_unmap(gptrMemMap, MemMapSize);
-    
-    return TRUE;
+    return 0;
 }
 
+void ExitTsp()
+{
+    do_devmem_unmap(gptrMemMap, MemMapSize);
+}
 
