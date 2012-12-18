@@ -627,6 +627,7 @@ int cmd_handler_show_tsp(int argc ,char *argv[])
         TSP_OUT("\nYou can use the command like \"show Localdata\"");
         TSP_OUT("\n\n"); 
 
+        return 0;
     }
 
 

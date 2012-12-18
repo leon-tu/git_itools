@@ -76,7 +76,7 @@ int cmd_handler_setmode_capframe(int argc, char *argv[])
             gCurrentPara.CapMode = 1;
         else if (strcmp(argv[1], "0") == 0)
             gCurrentPara.CapMode = 0;
-	else
+	    else
             INVALID_ARGUMENT;
     }
     else
@@ -229,13 +229,14 @@ int cmd_handler_encap_capframe(int argc, char *argv[])
         snprintf(pDstFileName, 256, "%scapvip_%dx%d_mode%d_%d.yuv",gCurrentPara.CapPath,rect.w,rect.h,gCurrentPara.CapMode,frm_cnt++);
 	if(NULL != (fp = fopen(pDstFileName, "wb")))
 	{
-            fwrite(pReadPtr, 1, ExpectBytes, fp);
-            fflush(fp);
-            fclose(fp);
+        fwrite(pReadPtr, 1, ExpectBytes, fp);
+        fflush(fp);
+        fclose(fp);
 	}
+    
 	else
 	{
-            printf("Failed to open %s\n",pDstFileName);
+        printf("Failed to open %s\n",pDstFileName);
 	}
         pDstBuf = NULL;
         rc = MV_PE_StreamBufRead(gPe, hStrmBuf, pDstBuf, ExpectBytes);

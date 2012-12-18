@@ -41,7 +41,7 @@ static CMD_HANDLER gCmdHandler_itools[] = {
     {"capframe", cmd_handler_capframe_itools, "capframe tool"},
     {"setplane", cmd_handler_setplane_itools, "setplane tool"},
     {"regctl", cmd_handler_regctl_itools, "regctl tool"},
-    {"tsp",cmd_handler_tsp_itools,"Implementation of a console for tsp_dtcm_parser Tool"},
+    {"tsp",cmd_handler_tsp_itools,"implementation of a console for tsp_dtcm_parser Tool"},
     	//{"quit",NULL,"return to previous status"},
 
     //extension and alias
@@ -70,6 +70,7 @@ extern CMD_HANDLER gCmdHandler_setplane[];
 //extern int iNumCmd_setplane;
 
 extern CMD_HANDLER gCmdHandler_tsp[];
+//extern int iNumCmd_tsp;
 
 static TOOL_CMD_HANDLERs gToolCmdHandler[]={
     {"mvlog", gCmdHandler_mvlog, 16 },    //iNumCmd_mvlog 16 ; 
@@ -90,31 +91,31 @@ static int INIT()
 {
   	HRESULT hr;
 
-  #ifndef WIN32
-    	MV_OSAL_Init();
-   	 if ((hr = MV_PE_Init(&gPe)) != S_OK)
-   	 {
-        		printf("PE Initialize failed! hr = 0x%x\n", hr);
-        		MV_PE_Remove(gPe);
-        		MV_OSAL_Exit();
-       		 return -1;
-    	}
+    #ifndef WIN32
+        MV_OSAL_Init();
+    if ((hr = MV_PE_Init(&gPe)) != S_OK)
+   	{
+        printf("PE Initialize failed! hr = 0x%x\n", hr);
+        MV_PE_Remove(gPe);
+        MV_OSAL_Exit();
+        return -1;
+    }
 	
-  #else
-    		MV_Debug_Initialize(DBG_ERROR);
+    #else
+        MV_Debug_Initialize(DBG_ERROR);
 
- #endif    
+    #endif    
 
-     	return 0;
+    return 0;
 }
 
 static void EXIT()
 { 
-  #ifndef WIN32
-    MV_PE_Remove(gPe);
-    MV_OSAL_Exit();
+    #ifndef WIN32
+        MV_PE_Remove(gPe);
+        MV_OSAL_Exit();
 
-  #endif
+    #endif
 }
 
 
@@ -155,19 +156,18 @@ static int cmd_handler_mvlog_itools(int argc, char *argv[])
 static int cmd_handler_capframe_itools(int argc,char * argv [])
 {
 	printf("*****************************************************\n");
-    	printf("*  Marvell Galois Capture Frame from VIP  *\n");
-   	 printf("******************************************************\n\n");
+    printf("*  Marvell Galois Capture Frame from VIP  *\n");
+   	printf("******************************************************\n\n");
 	if(Init_capframe() == -1)
-	{
-		return -1;
-	}
+        
+        return -1;
 	
 	if (argc >= 2)
-        		ItoolsCommandline(argc, argv);
-    	else
-        		ItoolsCtrlEntry(argv);
+        ItoolsCommandline(argc, argv);
+    else
+        ItoolsCtrlEntry(argv);
 
-    	return 0;
+    return 0;
 
 }
 
@@ -178,11 +178,11 @@ static int cmd_handler_vdmdump_itools(int argc, char * argv [ ])
     printf("***********************************************\n\n");
 		
 	if (argc >= 2)
-        		ItoolsCommandline(argc, argv);
-    	else
-        		ItoolsCtrlEntry(argv);
+        ItoolsCommandline(argc, argv);
+    else
+        ItoolsCtrlEntry(argv);
 
-    	return 0;
+    return 0;
 }
 
 static int cmd_handler_regctl_itools(int argc, char * argv [ ])
@@ -192,11 +192,11 @@ static int cmd_handler_regctl_itools(int argc, char * argv [ ])
     printf("***********************************************\n\n");
 		
 	if (argc >= 2)
-        		ItoolsCommandline(argc, argv);
-    	else
-        		ItoolsCtrlEntry(argv);
+        ItoolsCommandline(argc, argv);
+    else
+        ItoolsCtrlEntry(argv);
 
-    	return 0;
+    return 0;
 
 }
 
@@ -207,14 +207,14 @@ static int cmd_handler_setres_itools(int argc, char * argv [ ])
     printf("***********************************************\n\n");
 
 	if (argc >= 2)
-        		ItoolsCommandline(argc, argv);
-    	else
-    	{			
+        ItoolsCommandline(argc, argv);
+    else
+    {			
 		InitHdmiServe();  	//without arguments,supply full HDMI service
 		ItoolsCtrlEntry(argv);
-    	}
+    }
 
-    	return 0;
+    return 0;
 }
 
 static int cmd_handler_setplane_itools(int argc, char * argv [ ])
@@ -293,7 +293,6 @@ static BOOL ParseCommand(char *argv[],char *pCmd)
     int j;
     for (j = 0; j< iNumToolCmd; j++)
     {   
-        //printf("ParseCommand: %s, %s\n",pArg[0],gToolCmdHandler[j].pTool);
         if (strcmp(pArg[0], gToolCmdHandler[j].pTool) == 0)
         {   
             pCmdHandler = gToolCmdHandler[j].pCmdHandler;
@@ -305,18 +304,9 @@ static BOOL ParseCommand(char *argv[],char *pCmd)
 
     for (i = 0; i < iNumCmd; i++)
     {
-       // printf("%s,	%s\n",pArg[1],pCmdHandler[i].pCmd);
         if (strcmp(pArg[1], pCmdHandler[i].pCmd) == 0)
         {
             bValid = TRUE;
-            /*
-            int j;
-            printf("paramater in:\n");
-            for (j = 1; j <=argc-1; j++)
-            {
-                printf("%s\n",pArg[j]);
-            }
-            */
             pCmdHandler[i].Handler(argc-1, &pArg[1]);
         }
     }
@@ -325,11 +315,6 @@ static BOOL ParseCommand(char *argv[],char *pCmd)
     {
         printf("Invalid command! Type help to see all supported command!\n");
     }
-
-    /*for (i = 0; i < argc; i++)
-    {
-        printf("arg%d = %s\n", i, pArg[i]);
-    }*/
 
     return TRUE;
 }
@@ -435,13 +420,10 @@ int ItoolsCommandline(int argc, char *argv[])
         pCmdHandler->Handler(argc-1, &argv[1]);
     }
 
-    /*
+ 
     else
-    {
-        cmd_handler_help_itools(argc, argv);
         rc = E_INVALIDARG;
-    }
-    */
+  
     return rc;
 }
 
